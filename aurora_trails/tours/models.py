@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 class ActivityType(models.Model):
@@ -73,4 +74,5 @@ class TourSlot(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.tour.title} - {self.start_time:%Y-%m-%d %H:%M}"
+        local_start = timezone.localtime(self.start_time)
+        return f"{self.tour.title} - {local_start:%Y-%m-%d %H:%M}"
