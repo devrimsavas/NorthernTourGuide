@@ -4,7 +4,7 @@ A booking platform for Arctic adventure tours in Northern Norway. Guides publish
 
 ## Why This Project
 
-This project is personal to me. I studied Nordic Adventure Tourism at UiT in Alta and worked as a tour guide there, and during my studies I presented to Innovasjon Norge on how digitalization could strengthen tourism in Northern Norway. Many tour operators in the region are small, often just a few guides, and they lack simple digital tools to reach visitors and manage bookings. Aurora Trails is my attempt to build that tool: a platform where local guides can offer their experiences and travelers can discover and book them easily, helping small businesses grow and bringing more visitors to the Arctic.
+This project is personal to me. As a developer with a background in Arctic tourism, including working as a tour guide in Alta, I know the challenges of the industry from the inside. I have previously presented to Innovasjon Norge on how digitalization could strengthen tourism in Northern Norway. Many tour operators in the region are small, often just a few guides, and they lack simple digital tools to reach visitors and manage bookings. Aurora Trails is my attempt to build that tool: a platform where local guides can offer their experiences and travelers can discover and book them easily, helping small businesses grow and bringing more visitors to the Arctic.
 
 > Work in progress.
 
@@ -47,3 +47,9 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+
+## Screen Shots
+
+![Admin panel-bookings](docs/screenshots/bookings.png)
+![Admin panel-accounts](docs/screenshots/accounts.png)
+![Admin panel-customer](docs/screenshots/customer.png)
