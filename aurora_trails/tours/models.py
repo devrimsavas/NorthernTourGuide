@@ -73,6 +73,20 @@ class TourSlot(models.Model):
             ),
         ]
 
+    
+
     def __str__(self):
         local_start = timezone.localtime(self.start_time)
         return f"{self.tour.title} - {local_start:%Y-%m-%d %H:%M}"
+
+    #available slot calculation 
+    #written here to also use for reservation creation 
+    @property
+    def booked_spots(self):
+        result=self.bookings.exclude(status="cancelled").aggregate(
+            total=models.Sum("participants")
+        )
+        return result["total"] or 0
+    @property
+    def available_spots(self):
+        return self.tour.max_participants-self.booked_spots
