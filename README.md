@@ -8,15 +8,21 @@ This project is personal to me. As a developer with a background in Arctic touri
 
 > Work in progress.
 
-## Roadmap
+## Roadmap 
+_Last_updated :2026-10-17
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
 - [x] Data models: guides, activity types, locations, tours, tour slots, bookings
 - [x] Customized Django admin
-- [ ] REST API with Django REST Framework
-- [ ] Capacity-safe booking (row locking with `select_for_update` to prevent overbooking)
-- [ ] Role-based permissions for guides and customers
+- [x] REST API: tour list and tour detail with live slot availability
+- [x] REST API: booking creation with server-side price calculation
+- [x] Capacity-safe booking (row locking with `select_for_update` to prevent overbooking)
+- [x] Role-based permissions: customers only can create bookings
+- [x] Automated tests, including concurrent booking scenarios
+- [ ] REST API: customer booking history ("my bookings")
+- [ ] Role-based permissions and endpoints for guides
+- [ ] Token-based authentication for the frontend
 - [ ] Weather and aurora forecast integration (MET Norway API)
 - [ ] Reviews
 - [ ] Angular frontend

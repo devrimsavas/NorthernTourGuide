@@ -25,5 +25,10 @@ urlpatterns = [
     path('bookings/',include('bookings.urls')),
 
     #tour api 
-    path("api/tours/",include("tours.api_urls"))
+    path("api/tours/",include("tours.api_urls")),
+    #booking api 
+    path("api/bookings/", include("bookings.api_urls")),
+    #login pages 
+    path("api-auth/", include("rest_framework.urls")),
+
 ]
