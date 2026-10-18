@@ -16,6 +16,12 @@ class Location(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
     def __str__(self):
         return self.name
+class TourQuerySet(models.QuerySet):
+    def with_ratings(self):
+        return self.annotate(
+            average_rating=models.Avg("slots__bookings__review__rating"),
+            review_count=models.Count("slots__bookings__review"),
+        )
 
 class Tour(models.Model):
     class Difficulty(models.TextChoices):
@@ -52,6 +58,8 @@ class Tour(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects=TourQuerySet.as_manager()
 
     def __str__(self):
         return self.title
@@ -90,3 +98,4 @@ class TourSlot(models.Model):
     @property
     def available_spots(self):
         return self.tour.max_participants-self.booked_spots
+

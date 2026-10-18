@@ -220,3 +220,21 @@ class ReviewApiTests(APITestCase):
         response = self.client.post(self.review_url(self.finished_booking), {"rating": 6})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_tour_list_shows_average_rating_and_review_count(self):
+        """The tour list includes the average rating and the number of reviews."""
+        second_booking = Booking.objects.create(
+            slot=self.finished_booking.slot,
+            customer=self.other_customer,
+            participants=1,
+            total_price=1000,
+            status=Booking.Status.CONFIRMED,
+        )
+        Review.objects.create(booking=self.finished_booking, rating=5)
+        Review.objects.create(booking=second_booking, rating=4)
+
+        response = self.client.get(reverse("tour-list"))
+
+        tour = next(t for t in response.data if t["id"] == self.tour.id)
+        self.assertEqual(tour["average_rating"], 4.5)
+        self.assertEqual(tour["review_count"], 2)

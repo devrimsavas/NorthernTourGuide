@@ -9,6 +9,11 @@ class TourSerializer(serializers.ModelSerializer):
     guide=serializers.CharField(source="guide.get_full_name",read_only=True)
     activity_type=serializers.CharField(source="activity_type.name",read_only=True)
     location = serializers.CharField(source="location.name", read_only=True)
+    average_rating = serializers.DecimalField(
+        max_digits=3, decimal_places=1, coerce_to_string=False, read_only=True
+    )
+    review_count = serializers.IntegerField(read_only=True)
+
 
     #models and fields in JSON 
     class Meta:
@@ -24,6 +29,8 @@ class TourSerializer(serializers.ModelSerializer):
             "difficulty",
             "price",
             "max_participants",
+            "average_rating",
+            "review_count",
 
         ]
 

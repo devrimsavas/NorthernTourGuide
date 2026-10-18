@@ -29,8 +29,9 @@ def tours_main_page(request):
 
 class TourListView(generics.ListAPIView):
     serializer_class=TourSerializer
-    queryset=Tour.objects.filter(is_active=True).select_related(
-        "guide","activity_type","location"
+    queryset=(Tour.objects.filter(is_active=True)
+    .select_related("guide","activity_type","location")
+    .with_ratings()
     )
 
 # tour detail
@@ -41,6 +42,7 @@ class TourDetailView(generics.RetrieveAPIView):
         return (
             Tour.objects.filter(is_active=True)
             .select_related("guide", "activity_type", "location")
+            .with_ratings()
             .prefetch_related(Prefetch("slots", queryset=upcoming_slots))
 
         )

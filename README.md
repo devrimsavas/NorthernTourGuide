@@ -1,4 +1,5 @@
 # Aurora Trails
+
 ![Tests](https://github.com/devrimsavas/NorthernTourGuide/actions/workflows/tests.yml/badge.svg)
 
 A booking platform for Arctic adventure tours in Northern Norway. Guides publish tours such as husky safaris, northern lights tours and Sami culture experiences, and customers book them by date and available capacity.
@@ -77,12 +78,12 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 | GET, POST       | `/api/guide/tours/`                 | Guide    | List own tours or create a new tour                               |
 | GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide    | View or update an own tour                                        |
 | GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide    | List slots or add a new slot to an own tour                       |
-| GET | `/api/tours/<id>/reviews/` | Public | List reviews of a tour |
-| POST | `/api/bookings/<reference>/review/` | Customer | Review a finished tour (`rating`, `comment`)                                 |
+| GET             | `/api/tours/<id>/reviews/`          | Public   | List reviews of a tour                                            |
+| POST            | `/api/bookings/<reference>/review/` | Customer | Review a finished tour (`rating`, `comment`)                      |
 
 ## Testing
 
-The project has 17 automated tests covering booking rules, permissions and external API integrations.
+The project has 24 automated tests covering booking rules, permissions and external API integrations.
 
 ```bash
 cd aurora_trails
@@ -93,13 +94,15 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 
 ### Test suites
 
-| Test class             | Base class            | Database                  | What it covers                                                                      |
-| ---------------------- | --------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
-| `BookingCapacityTests` | `TransactionTestCase` | Yes, real commits         | Capacity limits, cancellation, and concurrent bookings competing for the same spots |
-| `ReviewApiTests` | `APITestCase` | Yes, rolled back per test | Review rules: only the booking's customer, only confirmed and finished tours, one review per booking, rating 1-5 |
-| `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                        |
-| `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages        |
-| `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                           |
+| Test class             | Base class            | Database                  | What it covers                                                                                                                                    |
+| ---------------------- | --------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BookingCapacityTests` | `TransactionTestCase` | Yes, real commits         | Capacity limits, cancellation, and concurrent bookings competing for the same spots                                                               |
+| `ReviewApiTests`       | `APITestCase`         | Yes, rolled back per test | Review rules: only the booking's customer, only confirmed and finished tours, one review per booking, rating 1-5, average rating in the tour list |
+| `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                                                                                      |
+| `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages                                                                      |
+| `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                                                                                         |
+
+                                                                                       |
 
 ### Why different test types?
 
