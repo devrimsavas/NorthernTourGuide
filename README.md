@@ -1,4 +1,5 @@
 # Aurora Trails
+![Tests](https://github.com/devrimsavas/NorthernTourGuide/actions/workflows/tests.yml/badge.svg)
 
 A booking platform for Arctic adventure tours in Northern Norway. Guides publish tours such as husky safaris, northern lights tours and Sami culture experiences, and customers book them by date and available capacity.
 
@@ -27,6 +28,8 @@ This project is personal to me. As a developer with a background in Arctic touri
 - [x] Token-based authentication for the frontend
 - [x] Weather and aurora forecast integration (MET Norway API)
 - [x] Aurora forecast (Kp index from NOAA, combined with cloud cover)
+- [x] Continuous integration with GitHub Actions (tests run against PostgreSQL on every push)
+
 - [ ] Reviews
 - [ ] Angular frontend
 
