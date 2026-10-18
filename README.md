@@ -8,8 +8,9 @@ This project is personal to me. As a developer with a background in Arctic touri
 
 > Work in progress.
 
-## Roadmap 
-_Last_updated :2026-10-18
+## Roadmap
+
+\_Last_updated :2026-10-18
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
@@ -22,9 +23,9 @@ _Last_updated :2026-10-18
 - [x] Automated tests, including concurrent booking scenarios
 - [x] REST API: customer booking history ("my bookings")
 - [x] REST API: booking cancellation by customers
-- [ ] Role-based permissions and endpoints for guides
+- [x] Role-based permissions and endpoints for guides
 - [x] Token-based authentication for the frontend
-- [ ] Weather and aurora forecast integration (MET Norway API)
+- [x] Weather and aurora forecast integration (MET Norway API)
 - [ ] Reviews
 - [ ] Angular frontend
 
@@ -60,3 +61,7 @@ python manage.py runserver
 ![Admin panel-bookings](docs/screenshots/bookings.png)
 ![Admin panel-accounts](docs/screenshots/accounts.png)
 ![Admin panel-customer](docs/screenshots/customer.png)
+
+## Data Sources
+
+Weather data from [MET Norway](https://api.met.no/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

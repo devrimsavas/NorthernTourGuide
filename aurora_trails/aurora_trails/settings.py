@@ -149,3 +149,6 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+# MET API 
+MET_NORWAY_USER_AGENT = "AuroraTrails/0.1 github.com/devrimsavas/NorthernTourGuide"

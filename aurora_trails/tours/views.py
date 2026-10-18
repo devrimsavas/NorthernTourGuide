@@ -5,6 +5,12 @@ from django.http import HttpResponse, JsonResponse
 from django.template import loader 
 from django.db.models import Prefetch
 from django.utils import timezone
+import requests
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .weather import forecast_at, get_forecast
 
 #list api view imports
 from rest_framework import generics
@@ -70,3 +76,32 @@ class GuideTourSlotListCreateView(generics.ListCreateAPIView):
         if tour.slots.filter(start_time=start_time).exists():
             raise ValidationError({"start_time": "This tour already has a slot at this time."})
         serializer.save(tour=tour)
+
+
+class TourForecastView(APIView):
+    def get(self, request, pk):
+        tour = get_object_or_404(Tour.objects.select_related("location"), pk=pk, is_active=True)
+        upcoming_slots = tour.slots.filter(start_time__gte=timezone.now())
+
+        try:
+            data = get_forecast(tour.location.latitude, tour.location.longitude)
+        except requests.RequestException:
+            return Response(
+                {"detail": "Weather forecast is temporarily unavailable."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(
+            {
+                "location": tour.location.name,
+                "source": "MET Norway (api.met.no), CC BY 4.0",
+                "slots": [
+                    {
+                        "slot_id": slot.id,
+                        "start_time": timezone.localtime(slot.start_time),
+                        "forecast": forecast_at(data, slot.start_time),
+                    }
+                    for slot in upcoming_slots
+                ],
+            }
+        )
