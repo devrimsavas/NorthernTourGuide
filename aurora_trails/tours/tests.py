@@ -12,6 +12,12 @@ from bookings.models import Booking
 
 from .models import ActivityType, Location, Tour, TourSlot
 
+from datetime import UTC
+
+from django.test import SimpleTestCase
+
+from .aurora import aurora_chance
+
 
 class GuideTourApiTests(APITestCase):
     """Tests for the guide endpoints: ownership, role checks and capacity rules."""
@@ -124,6 +130,19 @@ def make_met_response(moment):
         }
     }
 
+def make_kp_response(moment, kp):
+    """Build a fake NOAA Kp forecast with a single 3-hour window containing the given moment."""
+    utc = moment.astimezone(UTC)
+    window_start = utc.replace(hour=utc.hour - utc.hour % 3, minute=0, second=0, microsecond=0)
+    return [
+        {
+            "time_tag": window_start.strftime("%Y-%m-%dT%H:%M:%S"),
+            "kp": kp,
+            "observed": "predicted",
+            "noaa_scale": None,
+        }
+    ]
+
 
 class TourForecastApiTests(APITestCase):
     """Tests for the forecast endpoint. MET Norway is mocked, no real requests are made."""
@@ -150,6 +169,11 @@ class TourForecastApiTests(APITestCase):
             tour=self.tour, start_time=timezone.now() + timedelta(days=30)
         )
         self.url = reverse("tour-forecast", args=[self.tour.id])
+
+        kp_patcher = patch("tours.views.get_kp_forecast", return_value=[])
+        self.mock_get_kp_forecast = kp_patcher.start()
+        self.addCleanup(kp_patcher.stop)
+
 
     @patch("tours.views.get_forecast")
     def test_forecast_is_returned_for_upcoming_slot(self, mock_get_forecast):
@@ -181,3 +205,45 @@ class TourForecastApiTests(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+    @patch("tours.views.get_forecast")
+    def test_aurora_chance_is_returned_for_upcoming_slot(self, mock_get_forecast):
+        """High Kp with a clear sky gives a high aurora chance."""
+        mock_get_forecast.return_value = make_met_response(self.soon_slot.start_time)
+        self.mock_get_kp_forecast.return_value = make_kp_response(self.soon_slot.start_time, kp=4.67)
+
+        response = self.client.get(self.url)
+
+        soon = next(s for s in response.data["slots"] if s["slot_id"] == self.soon_slot.id)
+        self.assertEqual(soon["aurora"]["kp"], 4.67)
+        self.assertEqual(soon["aurora"]["chance"], "high")
+
+    @patch("tours.views.get_forecast")
+    def test_weather_is_still_returned_when_noaa_is_unavailable(self, mock_get_forecast):
+        """If NOAA fails, the weather forecast is still returned and aurora is null."""
+        mock_get_forecast.return_value = make_met_response(self.soon_slot.start_time)
+        self.mock_get_kp_forecast.side_effect = requests.RequestException
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        soon = next(s for s in response.data["slots"] if s["slot_id"] == self.soon_slot.id)
+        self.assertIsNotNone(soon["forecast"])
+        self.assertIsNone(soon["aurora"])
+
+
+class AuroraChanceTests(SimpleTestCase):
+    """Unit tests for the aurora chance rule. No database or HTTP needed."""
+
+    def test_cloudy_sky_gives_low_chance_even_with_high_kp(self):
+        self.assertEqual(aurora_chance(kp=6, cloud_area_fraction=90), "low")
+
+    def test_strong_kp_and_clear_sky_gives_high_chance(self):
+        self.assertEqual(aurora_chance(kp=4.33, cloud_area_fraction=20), "high")
+
+    def test_moderate_kp_gives_medium_chance(self):
+        self.assertEqual(aurora_chance(kp=2.5, cloud_area_fraction=50), "medium")
+
+    def test_missing_data_gives_no_chance(self):
+        self.assertIsNone(aurora_chance(kp=None, cloud_area_fraction=20))   

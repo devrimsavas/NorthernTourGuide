@@ -26,6 +26,7 @@ This project is personal to me. As a developer with a background in Arctic touri
 - [x] Role-based permissions and endpoints for guides
 - [x] Token-based authentication for the frontend
 - [x] Weather and aurora forecast integration (MET Norway API)
+- [x] Aurora forecast (Kp index from NOAA, combined with cloud cover)
 - [ ] Reviews
 - [ ] Angular frontend
 
@@ -55,23 +56,54 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+
 ## API Endpoints
 
 Authenticated endpoints require an `Authorization: Bearer <access_token>` header.
 
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/auth/token/` | Public | Log in with email and password, returns access and refresh tokens |
-| POST | `/api/auth/token/refresh/` | Public | Get a new access token using a refresh token |
-| GET | `/api/tours/` | Public | List active tours |
-| GET | `/api/tours/<id>/` | Public | Tour details with upcoming slots and available spots |
-| GET | `/api/tours/<id>/forecast/` | Public | Weather forecast for each upcoming slot (MET Norway) |
-| POST | `/api/bookings/` | Customer | Create a booking (`slot`, `participants`) |
-| GET | `/api/bookings/me/` | Customer | List the logged-in customer's bookings |
-| POST | `/api/bookings/<reference>/cancel/` | Customer | Cancel a booking |
-| GET, POST | `/api/guide/tours/` | Guide | List own tours or create a new tour |
-| GET, PUT, PATCH | `/api/guide/tours/<id>/` | Guide | View or update an own tour |
-| GET, POST | `/api/guide/tours/<id>/slots/` | Guide | List slots or add a new slot to an own tour |
+| Method          | Endpoint                            | Access   | Description                                                       |
+| --------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
+| POST            | `/api/auth/token/`                  | Public   | Log in with email and password, returns access and refresh tokens |
+| POST            | `/api/auth/token/refresh/`          | Public   | Get a new access token using a refresh token                      |
+| GET             | `/api/tours/`                       | Public   | List active tours                                                 |
+| GET             | `/api/tours/<id>/`                  | Public   | Tour details with upcoming slots and available spots              |
+| GET             | `/api/tours/<id>/forecast/`         | Public   | Weather forecast for each upcoming slot (MET Norway)              |
+| POST            | `/api/bookings/`                    | Customer | Create a booking (`slot`, `participants`)                         |
+| GET             | `/api/bookings/me/`                 | Customer | List the logged-in customer's bookings                            |
+| POST            | `/api/bookings/<reference>/cancel/` | Customer | Cancel a booking                                                  |
+| GET, POST       | `/api/guide/tours/`                 | Guide    | List own tours or create a new tour                               |
+| GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide    | View or update an own tour                                        |
+| GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide    | List slots or add a new slot to an own tour                       |
+
+## Testing
+
+The project has 17 automated tests covering booking rules, permissions and external API integrations.
+
+```bash
+cd aurora_trails
+python manage.py test -v 2
+```
+
+Django creates a temporary test database (`test_aurora_trails`) for each run and deletes it afterwards, so tests never touch real data. The PostgreSQL user therefore needs the `CREATEDB` permission.
+
+### Test suites
+
+| Test class             | Base class            | Database                  | What it covers                                                                      |
+| ---------------------- | --------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `BookingCapacityTests` | `TransactionTestCase` | Yes, real commits         | Capacity limits, cancellation, and concurrent bookings competing for the same spots |
+| `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                        |
+| `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages        |
+| `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                           |
+
+### Why different test types?
+
+- **`TransactionTestCase` for concurrency:** Django's default `TestCase` wraps each test in a transaction and rolls it back, which is fast but keeps everything in a single database connection. Row locking with `select_for_update` can only be tested with separate connections that really commit. The concurrency test starts two threads, each with its own connection, synchronized with a `threading.Barrier` so they hit the database at the same moment. Exactly one booking must succeed.
+- **`APITestCase` for endpoints:** Tests send real HTTP requests through DRF's test client. `force_authenticate` simulates a logged-in user, and URLs are resolved by name with `reverse()`, so tests keep working if paths change.
+- **`SimpleTestCase` for pure logic:** No database is created, which makes these the fastest tests.
+
+### External APIs are mocked
+
+Tests never call MET Norway or NOAA. `unittest.mock.patch` replaces the fetch functions with fakes that return minimal responses or raise errors. This keeps tests fast, deterministic and runnable offline, and avoids sending unnecessary traffic to public services.
 
 ## Screen Shots
 
@@ -82,3 +114,4 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 ## Data Sources
 
 Weather data from [MET Norway](https://api.met.no/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Kp index data from the [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/).

@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .weather import forecast_at, get_forecast
+from .aurora import aurora_chance,get_kp_forecast,kp_at
+
 
 #list api view imports
 from rest_framework import generics
@@ -84,24 +86,37 @@ class TourForecastView(APIView):
         upcoming_slots = tour.slots.filter(start_time__gte=timezone.now())
 
         try:
-            data = get_forecast(tour.location.latitude, tour.location.longitude)
+            weather_data = get_forecast(tour.location.latitude, tour.location.longitude)
         except requests.RequestException:
             return Response(
                 {"detail": "Weather forecast is temporarily unavailable."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
+        try:
+            kp_data = get_kp_forecast()
+        except requests.RequestException:
+            kp_data = None
+
         return Response(
             {
                 "location": tour.location.name,
-                "source": "MET Norway (api.met.no), CC BY 4.0",
-                "slots": [
-                    {
-                        "slot_id": slot.id,
-                        "start_time": timezone.localtime(slot.start_time),
-                        "forecast": forecast_at(data, slot.start_time),
-                    }
-                    for slot in upcoming_slots
+                "sources": [
+                    "Weather: MET Norway (api.met.no), CC BY 4.0",
+                    "Kp index: NOAA Space Weather Prediction Center",
                 ],
+                "slots": [self._slot_forecast(slot, weather_data, kp_data) for slot in upcoming_slots],
             }
         )
+
+    def _slot_forecast(self, slot, weather_data, kp_data):
+        weather = forecast_at(weather_data, slot.start_time)
+        kp = kp_at(kp_data, slot.start_time) if kp_data else None
+        cloud = weather["cloud_area_fraction"] if weather else None
+
+        return {
+            "slot_id": slot.id,
+            "start_time": timezone.localtime(slot.start_time),
+            "forecast": weather,
+            "aurora": {"kp": kp, "chance": aurora_chance(kp, cloud)} if kp is not None else None,
+        }
