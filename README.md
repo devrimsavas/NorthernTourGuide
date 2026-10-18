@@ -55,6 +55,23 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+## API Endpoints
+
+Authenticated endpoints require an `Authorization: Bearer <access_token>` header.
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/auth/token/` | Public | Log in with email and password, returns access and refresh tokens |
+| POST | `/api/auth/token/refresh/` | Public | Get a new access token using a refresh token |
+| GET | `/api/tours/` | Public | List active tours |
+| GET | `/api/tours/<id>/` | Public | Tour details with upcoming slots and available spots |
+| GET | `/api/tours/<id>/forecast/` | Public | Weather forecast for each upcoming slot (MET Norway) |
+| POST | `/api/bookings/` | Customer | Create a booking (`slot`, `participants`) |
+| GET | `/api/bookings/me/` | Customer | List the logged-in customer's bookings |
+| POST | `/api/bookings/<reference>/cancel/` | Customer | Cancel a booking |
+| GET, POST | `/api/guide/tours/` | Guide | List own tours or create a new tour |
+| GET, PUT, PATCH | `/api/guide/tours/<id>/` | Guide | View or update an own tour |
+| GET, POST | `/api/guide/tours/<id>/slots/` | Guide | List slots or add a new slot to an own tour |
 
 ## Screen Shots
 
