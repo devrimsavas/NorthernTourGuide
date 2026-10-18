@@ -141,3 +141,11 @@ AUTH_USER_MODEL="accounts.User"
 
 
 LOGIN_REDIRECT_URL="/api/tours/"
+
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+}

@@ -19,4 +19,10 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This tour is not available.")
         return slot
 
-    
+#customer can see his own tours and date
+class BookingListSerializer(serializers.ModelSerializer):
+    tour=serializers.CharField(source="slot.tour.title",read_only=True)
+    start_time=serializers.DateTimeField(source="slot.start_time", read_only=True)
+    class Meta:
+        model=Booking
+        fields=["reference", "tour", "start_time", "participants", "total_price", "status", "created_at"]

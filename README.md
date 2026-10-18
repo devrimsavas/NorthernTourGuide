@@ -9,7 +9,7 @@ This project is personal to me. As a developer with a background in Arctic touri
 > Work in progress.
 
 ## Roadmap 
-_Last_updated :2026-10-17
+_Last_updated :2026-10-18
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
@@ -20,9 +20,10 @@ _Last_updated :2026-10-17
 - [x] Capacity-safe booking (row locking with `select_for_update` to prevent overbooking)
 - [x] Role-based permissions: customers only can create bookings
 - [x] Automated tests, including concurrent booking scenarios
-- [ ] REST API: customer booking history ("my bookings")
+- [x] REST API: customer booking history ("my bookings")
+- [x] REST API: booking cancellation by customers
 - [ ] Role-based permissions and endpoints for guides
-- [ ] Token-based authentication for the frontend
+- [x] Token-based authentication for the frontend
 - [ ] Weather and aurora forecast integration (MET Norway API)
 - [ ] Reviews
 - [ ] Angular frontend

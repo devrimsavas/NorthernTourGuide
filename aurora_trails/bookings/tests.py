@@ -14,7 +14,7 @@ from accounts.models import User
 from tours.models import ActivityType, Location, Tour, TourSlot
 
 from .models import Booking
-from .services import create_booking
+from .services import create_booking,cancel_booking
 
 # Create your tests here.
 
@@ -94,3 +94,21 @@ class BookingCapacityTests(TransactionTestCase):
         self.assertEqual(results.count("success"), 1)
         self.assertEqual(results.count("rejected"), 1)
         self.assertEqual(Booking.objects.count(), 1)
+
+# CANCEL RESERVATION
+    def test_cancelling_a_booking_frees_up_spots(self):
+        """Cancelling a booking must make its spots available again."""
+        booking = create_booking(self.customer_a, self.slot.id, participants=2)
+        self.assertEqual(self.slot.available_spots, 0)
+
+        cancel_booking(booking)
+
+        self.assertEqual(self.slot.available_spots, 2)
+
+    def test_booking_cannot_be_cancelled_twice(self):
+        """An already cancelled booking must not be cancelled again."""
+        booking = create_booking(self.customer_a, self.slot.id, participants=2)
+        cancel_booking(booking)
+
+        with self.assertRaises(ValidationError):
+            cancel_booking(booking)

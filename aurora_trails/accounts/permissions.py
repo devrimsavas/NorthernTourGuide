@@ -8,7 +8,13 @@ from .models import User
 # middleware for customer
 #base permission DRF class we use this class 
 class IsCustomer(BasePermission):
-    message="Only Customers can make bookings"
+    message = "This action is only available to customers."
     #true or false 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role==User.Role.CUSTOMER
+# guide 
+class IsGuide(BasePermission):
+    message = "This action is only available to guides."
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == User.Role.GUIDE

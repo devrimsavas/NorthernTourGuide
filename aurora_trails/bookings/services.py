@@ -1,4 +1,5 @@
 # database lock get view response , apply work rules
+from django.utils import timezone
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
 
@@ -25,3 +26,15 @@ def create_booking(customer,slot_id,participants):
             #not yet any payment, if there is avaliable slot reservation confirmed
             status=Booking.Status.CONFIRMED,
         )
+
+# cancel reservation soft delete 
+def cancel_booking(booking):
+    if booking.status == Booking.Status.CANCELLED:
+        raise ValidationError({"status": "This booking is already cancelled."})
+
+    if booking.slot.start_time <= timezone.now():
+        raise ValidationError({"status": "Bookings cannot be cancelled after the tour has started."})
+
+    booking.status = Booking.Status.CANCELLED
+    booking.save(update_fields=["status"])
+    return booking

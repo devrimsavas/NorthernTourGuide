@@ -1,8 +1,9 @@
 # convert django models to JSON
-# like an DTO in ASP.NET which fields will be shown etc 
+# like a DTO in ASP.NET which fields will be shown etc 
 # DRF ModelSerializer 
 from rest_framework import serializers
 from .models import Tour,TourSlot
+from django.utils import timezone
 
 class TourSerializer(serializers.ModelSerializer):
     guide=serializers.CharField(source="guide.get_full_name",read_only=True)
@@ -38,3 +39,47 @@ class TourDetailSerializer(TourSerializer):
     slots=TourSlotSerializer(many=True,read_only=True)
     class Meta(TourSerializer.Meta):
         fields=TourSerializer.Meta.fields+["slots"]
+
+
+#Guide tour serializer 
+class GuideTourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tour
+        fields = [
+            "id",
+            "title",
+            "description",
+            "activity_type",
+            "location",
+            "duration_minutes",
+            "difficulty",
+            "price",
+            "max_participants",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+        extra_kwargs = {
+            "duration_minutes": {"min_value": 1},
+            "max_participants": {"min_value": 1},
+            "price": {"min_value": 0},
+        }
+
+    def validate_max_participants(self, value):
+        if self.instance is not None:
+            most_booked = max(
+                (slot.booked_spots for slot in self.instance.slots.all()), default=0
+            )
+            if value < most_booked:
+                raise serializers.ValidationError(
+                    f"Cannot be lower than {most_booked}, the most booked spots on a slot."
+                )
+        return value
+
+    
+class GuideTourSlotSerializer(TourSlotSerializer):
+    def validate_start_time(self, value):
+        if value <= timezone.now():
+            raise serializers.ValidationError("Slots must be scheduled in the future.")
+        return value
