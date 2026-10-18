@@ -19,6 +19,8 @@ from rest_framework import generics
 from .models import Tour,TourSlot
 from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer,GuideTourSlotSerializer
 from accounts.permissions import IsGuide
+from bookings.models import Review
+from bookings.serializers import ReviewSerializer
 
 # Create your views here.
 def tours_main_page(request):
@@ -120,3 +122,12 @@ class TourForecastView(APIView):
             "forecast": weather,
             "aurora": {"kp": kp, "chance": aurora_chance(kp, cloud)} if kp is not None else None,
         }
+
+
+class TourReviewListView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        return Review.objects.filter(booking__slot__tour_id=self.kwargs["pk"]).select_related(
+            "booking__customer"
+        )

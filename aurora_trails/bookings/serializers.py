@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 #models 
-from .models import Booking
+from .models import Booking,Review
 
 class BookingCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,3 +26,20 @@ class BookingListSerializer(serializers.ModelSerializer):
     class Meta:
         model=Booking
         fields=["reference", "tour", "start_time", "participants", "total_price", "status", "created_at"]
+
+
+#customers' review it will show only customer's name and country (i mean tourist, visitor )
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ["rating", "comment", "created_at"]
+        read_only_fields = ["created_at"]
+        extra_kwargs = {"rating": {"min_value": 1, "max_value": 5}}
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    reviewer = serializers.CharField(source="booking.customer.first_name", read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["id", "reviewer", "rating", "comment", "created_at"]

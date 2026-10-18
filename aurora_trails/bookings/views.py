@@ -5,13 +5,13 @@ from rest_framework import generics
 
 from accounts.permissions import IsCustomer
 from .models import Booking
-from .serializers import BookingCreateSerializer,BookingListSerializer
+from .serializers import BookingCreateSerializer,BookingListSerializer,ReviewCreateSerializer
 
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .services import cancel_booking, create_booking
+from .services import cancel_booking, create_booking,create_review
 
 
 # Create your views here.
@@ -52,3 +52,20 @@ class BookingCancelView(APIView):
         )
         cancel_booking(booking)
         return Response(BookingListSerializer(booking).data)
+
+
+class BookingReviewCreateView(generics.CreateAPIView):
+    serializer_class = ReviewCreateSerializer
+    permission_classes = [IsCustomer]
+
+    def perform_create(self, serializer):
+        booking = get_object_or_404(
+            Booking.objects.select_related("slot__tour"),
+            reference=self.kwargs["reference"],
+            customer=self.request.user,
+        )
+        serializer.instance = create_review(
+            booking,
+            rating=serializer.validated_data["rating"],
+            comment=serializer.validated_data.get("comment", ""),
+        )

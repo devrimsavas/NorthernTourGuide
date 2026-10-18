@@ -2,6 +2,8 @@
 from django.utils import timezone
 from django.db import transaction
 from rest_framework.exceptions import ValidationError
+from datetime import timedelta
+from .models import Booking,Review
 
 #models 
 from tours.models import TourSlot
@@ -38,3 +40,17 @@ def cancel_booking(booking):
     booking.status = Booking.Status.CANCELLED
     booking.save(update_fields=["status"])
     return booking
+
+#create review 
+def create_review(booking, rating, comment=""):
+    if booking.status != Booking.Status.CONFIRMED:
+        raise ValidationError({"booking": "Only confirmed bookings can be reviewed."})
+
+    tour_end = booking.slot.start_time + timedelta(minutes=booking.slot.tour.duration_minutes)
+    if tour_end > timezone.now():
+        raise ValidationError({"booking": "You can review a tour only after it has ended."})
+
+    if Review.objects.filter(booking=booking).exists():
+        raise ValidationError({"booking": "This booking has already been reviewed."})
+
+    return Review.objects.create(booking=booking, rating=rating, comment=comment)

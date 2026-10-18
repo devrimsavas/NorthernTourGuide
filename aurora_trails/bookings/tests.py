@@ -12,8 +12,10 @@ from rest_framework.exceptions import ValidationError
 
 from accounts.models import User
 from tours.models import ActivityType, Location, Tour, TourSlot
-
-from .models import Booking
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from .models import Booking,Review
 from .services import create_booking,cancel_booking
 
 # Create your tests here.
@@ -112,3 +114,109 @@ class BookingCapacityTests(TransactionTestCase):
 
         with self.assertRaises(ValidationError):
             cancel_booking(booking)
+
+#review test (mock)
+class ReviewApiTests(APITestCase):
+    """Tests for review rules: only customers with a confirmed, finished booking can review."""
+
+    def setUp(self):
+        """Create a finished slot, an upcoming slot and bookings for two customers."""
+        guide = User.objects.create_user(
+            username="guide", email="guide@test.no", password="testpass123", role=User.Role.GUIDE
+        )
+        self.customer = User.objects.create_user(
+            username="lukas",
+            email="lukas@test.no",
+            password="testpass123",
+            role=User.Role.CUSTOMER,
+            first_name="Lukas",
+            last_name="Weber",
+        )
+        self.other_customer = User.objects.create_user(
+            username="emma", email="emma@test.no", password="testpass123", role=User.Role.CUSTOMER
+        )
+        self.tour = Tour.objects.create(
+            guide=guide,
+            activity_type=ActivityType.objects.create(name="Husky Safari"),
+            location=Location.objects.create(name="Alta", latitude=69.9689, longitude=23.2717),
+            title="Test Tour",
+            description="Test description",
+            duration_minutes=120,
+            price=1000,
+            max_participants=8,
+        )
+        finished_slot = TourSlot.objects.create(
+            tour=self.tour, start_time=timezone.now() - timedelta(days=1)
+        )
+        upcoming_slot = TourSlot.objects.create(
+            tour=self.tour, start_time=timezone.now() + timedelta(days=7)
+        )
+        self.finished_booking = Booking.objects.create(
+            slot=finished_slot,
+            customer=self.customer,
+            participants=2,
+            total_price=2000,
+            status=Booking.Status.CONFIRMED,
+        )
+        self.upcoming_booking = Booking.objects.create(
+            slot=upcoming_slot,
+            customer=self.customer,
+            participants=2,
+            total_price=2000,
+            status=Booking.Status.CONFIRMED,
+        )
+        self.client.force_authenticate(user=self.customer)
+
+    def review_url(self, booking):
+        return reverse("booking-review", args=[booking.reference])
+
+    def test_customer_can_review_a_finished_tour(self):
+        """A review on a finished tour is saved and shown publicly with the first name only."""
+        response = self.client.post(
+            self.review_url(self.finished_booking), {"rating": 5, "comment": "Amazing dogs!"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        public = self.client.get(reverse("tour-reviews", args=[self.tour.id]))
+        self.assertEqual(len(public.data), 1)
+        self.assertEqual(public.data[0]["reviewer"], "Lukas")
+        self.assertEqual(public.data[0]["rating"], 5)
+
+    def test_cannot_review_before_tour_ends(self):
+        """A tour that has not ended yet cannot be reviewed."""
+        response = self.client.post(self.review_url(self.upcoming_booking), {"rating": 4})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Review.objects.count(), 0)
+
+    def test_cannot_review_the_same_booking_twice(self):
+        """Only one review is allowed per booking."""
+        self.client.post(self.review_url(self.finished_booking), {"rating": 5})
+
+        response = self.client.post(self.review_url(self.finished_booking), {"rating": 1})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Review.objects.count(), 1)
+
+    def test_cannot_review_a_cancelled_booking(self):
+        """Cancelled bookings cannot be reviewed."""
+        self.finished_booking.status = Booking.Status.CANCELLED
+        self.finished_booking.save()
+
+        response = self.client.post(self.review_url(self.finished_booking), {"rating": 5})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_cannot_review_another_customers_booking(self):
+        """A customer gets 404 when trying to review someone else's booking."""
+        self.client.force_authenticate(user=self.other_customer)
+
+        response = self.client.post(self.review_url(self.finished_booking), {"rating": 1})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_rating_must_be_between_1_and_5(self):
+        """Ratings outside the 1-5 range are rejected."""
+        response = self.client.post(self.review_url(self.finished_booking), {"rating": 6})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

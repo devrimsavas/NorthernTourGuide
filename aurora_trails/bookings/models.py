@@ -42,3 +42,26 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.customer.email} - {self.slot}"
+
+#reviews class 
+class Review(models.Model):
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="review",
+    )
+    rating = models.PositiveSmallIntegerField()
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(rating__gte=1, rating__lte=5),
+                name="review_rating_between_1_and_5",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.booking.customer.email} - {self.rating}/5"
