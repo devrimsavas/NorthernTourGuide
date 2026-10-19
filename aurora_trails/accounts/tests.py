@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import User
+from .models import User,GuideProfile
 
 
 class RegisterApiTests(APITestCase):
@@ -88,4 +88,37 @@ class MeApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+
+class GuideListApiTests(APITestCase):
+    """Tests for the public guide list: only active guides with a profile, no private data."""
+
+    def test_only_active_guides_with_a_profile_are_listed(self):
+        """Customers, guides without a profile and inactive guides are not shown."""
+        visible = User.objects.create_user(
+            username="kari", email="kari@test.no", password="StrongPass2026",
+            role=User.Role.GUIDE, first_name="Kari",
+        )
+        GuideProfile.objects.create(user=visible, bio="Tromsø local", languages="English")
+
+        User.objects.create_user(
+            username="noprofile", email="noprofile@test.no", password="StrongPass2026",
+            role=User.Role.GUIDE,
+        )
+        inactive = User.objects.create_user(
+            username="inactive", email="inactive@test.no", password="StrongPass2026",
+            role=User.Role.GUIDE, is_active=False,
+        )
+        GuideProfile.objects.create(user=inactive)
+        User.objects.create_user(
+            username="customer", email="customer@test.no", password="StrongPass2026",
+            role=User.Role.CUSTOMER,
+        )
+
+        response = self.client.get(reverse("guide-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["first_name"], "Kari")
+        self.assertEqual(response.data[0]["bio"], "Tromsø local")
+        self.assertNotIn("email", response.data[0])
 

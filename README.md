@@ -33,6 +33,7 @@ _Last updated: 2026-10-19_
 - [x] Aurora forecast (Kp index from NOAA, combined with cloud cover)
 - [x] Continuous integration with GitHub Actions (tests run against PostgreSQL on every push)
 - [x] Reviews (only for confirmed bookings after the tour has ended)
+- [x] Public guide profiles for the frontend
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -66,27 +67,29 @@ python manage.py runserver
 
 Authenticated endpoints require an `Authorization: Bearer <access_token>` header.
 
-| Method          | Endpoint                            | Access   | Description                                                       |
-| --------------- | ----------------------------------- | -------- | ----------------------------------------------------------------- |
-| POST            | `/api/auth/token/`                  | Public   | Log in with email and password, returns access and refresh tokens |
-| POST            | `/api/auth/token/refresh/`          | Public   | Get a new access token using a refresh token                      |
-| GET             | `/api/tours/`                       | Public   | List active tours                                                 |
-| GET             | `/api/tours/<id>/`                  | Public   | Tour details with upcoming slots and available spots              |
-| GET             | `/api/tours/<id>/forecast/`         | Public   | Weather forecast for each upcoming slot (MET Norway)              |
-| POST            | `/api/bookings/`                    | Customer | Create a booking (`slot`, `participants`)                         |
-| GET             | `/api/bookings/me/`                 | Customer | List the logged-in customer's bookings                            |
-| POST            | `/api/bookings/<reference>/cancel/` | Customer | Cancel a booking                                                  |
-| GET, POST       | `/api/guide/tours/`                 | Guide    | List own tours or create a new tour                               |
-| GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide    | View or update an own tour                                        |
-| GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide    | List slots or add a new slot to an own tour                       |
-| GET             | `/api/tours/<id>/reviews/`          | Public   | List reviews of a tour                                            |
-| POST            | `/api/bookings/<reference>/review/` | Customer | Review a finished tour (`rating`, `comment`)                      |
-| POST | `/api/auth/register/` | Public | Create a customer account, returns the user and access/refresh tokens |
-| GET | `/api/auth/me/` | Authenticated | Details and role of the logged-in user |
+| Method          | Endpoint                            | Access        | Description                                                           |
+| --------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------- |
+| POST            | `/api/auth/token/`                  | Public        | Log in with email and password, returns access and refresh tokens     |
+| POST            | `/api/auth/token/refresh/`          | Public        | Get a new access token using a refresh token                          |
+| GET             | `/api/tours/`                       | Public        | List active tours                                                     |
+| GET             | `/api/tours/<id>/`                  | Public        | Tour details with upcoming slots and available spots                  |
+| GET             | `/api/tours/<id>/forecast/`         | Public        | Weather forecast for each upcoming slot (MET Norway)                  |
+| POST            | `/api/bookings/`                    | Customer      | Create a booking (`slot`, `participants`)                             |
+| GET             | `/api/bookings/me/`                 | Customer      | List the logged-in customer's bookings                                |
+| POST            | `/api/bookings/<reference>/cancel/` | Customer      | Cancel a booking                                                      |
+| GET, POST       | `/api/guide/tours/`                 | Guide         | List own tours or create a new tour                                   |
+| GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide         | View or update an own tour                                            |
+| GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide         | List slots or add a new slot to an own tour                           |
+| GET             | `/api/tours/<id>/reviews/`          | Public        | List reviews of a tour                                                |
+| POST            | `/api/bookings/<reference>/review/` | Customer      | Review a finished tour (`rating`, `comment`)                          |
+| POST            | `/api/auth/register/`               | Public        | Create a customer account, returns the user and access/refresh tokens |
+| GET             | `/api/auth/me/`                     | Authenticated | Details and role of the logged-in user                                |
+| GET             | `/api/guides/`                      | Public        | List guides with bio, languages and base location                     |
+| GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                         |
 
 ## Testing
 
-The project has 29 automated tests covering booking rules, permissions and external API integrations.
+The project has 30 automated tests covering booking rules, permissions and external API integrations.
 
 ```bash
 cd aurora_trails
@@ -106,6 +109,9 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `RegisterApiTests`     | `APITestCase`         | Yes, rolled back per test | Self-registration: always a customer, case-insensitive unique email, password strength, tokens returned                                           |
 | `MeApiTests`           | `APITestCase`         | Yes, rolled back per test | Current user endpoint: returns details and role, requires authentication                                                                          |
 | `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                                                                                         |
+| `GuideListApiTests`    | `APITestCase`         | Yes, rolled back per test | Public guide list: only active guides with a profile, no private data                                                                             |
+
+                                                                   |
 
 ### Why different test types?
 

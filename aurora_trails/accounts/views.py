@@ -8,8 +8,10 @@ from .serializers import RegisterSerializer
 from rest_framework import response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from .serializers import MeSerializer, RegisterSerializer
+from .serializers import MeSerializer, RegisterSerializer,GuideSerializer
 from rest_framework.response import Response
+from .models import User
+
 #middleware
 
 
@@ -43,3 +45,23 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+def public_guides():
+    return (
+        User.objects.filter(role=User.Role.GUIDE, is_active=True, guide_profile__isnull=False)
+        .select_related("guide_profile__base_location")
+        .order_by("first_name")
+    )
+
+
+class GuideListView(generics.ListAPIView):
+    serializer_class = GuideSerializer
+    permission_classes = [AllowAny]
+    queryset = public_guides()
+
+
+class GuideDetailView(generics.RetrieveAPIView):
+    serializer_class = GuideSerializer
+    permission_classes = [AllowAny]
+    queryset = public_guides()

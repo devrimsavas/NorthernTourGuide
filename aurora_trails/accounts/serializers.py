@@ -33,3 +33,26 @@ class MeSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "email", "first_name", "last_name", "role"]
         read_only_fields = fields
+
+
+class GuideSerializer(serializers.ModelSerializer):
+    bio = serializers.CharField(source="guide_profile.bio", read_only=True)
+    languages = serializers.CharField(source="guide_profile.languages", read_only=True)
+    years_of_experience = serializers.IntegerField(
+        source="guide_profile.years_of_experience", read_only=True
+    )
+    base_location = serializers.CharField(
+        source="guide_profile.base_location.name", read_only=True
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "bio",
+            "languages",
+            "years_of_experience",
+            "base_location",
+        ]

@@ -32,5 +32,6 @@ urlpatterns = [
     path("api-auth/", include("rest_framework.urls")),
     path("api/auth/", include("accounts.api_urls")),
     path("api/guide/", include("tours.guide_api_urls")),
+    path("api/guides/", include("accounts.guide_api_urls")),
 
 ]
