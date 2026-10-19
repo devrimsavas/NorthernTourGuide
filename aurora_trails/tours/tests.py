@@ -320,3 +320,71 @@ class TourImageApiTests(APITestCase):
         self.assertEqual(len(images), 2)
         self.assertIn("cover", images[0]["image"])
         self.assertIn("second", images[1]["image"])
+
+
+class TourFilterApiTests(APITestCase):
+    """Tests for tour list filters and the lookup lists used by the frontend dropdowns."""
+
+    def setUp(self):
+        """Create two tours in different locations, with slots placed relative to today."""
+        guide = User.objects.create_user(
+            username="guide", email="guide@test.no", password="testpass123", role=User.Role.GUIDE
+        )
+        self.alta = Location.objects.create(name="Alta", latitude=69.9689, longitude=23.2717)
+        tromso = Location.objects.create(name="Tromsø", latitude=69.6492, longitude=18.9553)
+        husky = ActivityType.objects.create(name="Husky Safari")
+        aurora = ActivityType.objects.create(name="Northern Lights Tour")
+
+        self.husky_tour = Tour.objects.create(
+            guide=guide, activity_type=husky, location=self.alta, title="Husky Tour",
+            description="Test", duration_minutes=180, price=2490, max_participants=8,
+        )
+        self.aurora_tour = Tour.objects.create(
+            guide=guide, activity_type=aurora, location=tromso, title="Aurora Tour",
+            description="Test", duration_minutes=240, price=1890, max_participants=12,
+        )
+
+        now = timezone.now()
+        TourSlot.objects.create(tour=self.husky_tour, start_time=now + timedelta(days=30))
+        TourSlot.objects.create(tour=self.aurora_tour, start_time=now + timedelta(days=10))
+        TourSlot.objects.create(tour=self.aurora_tour, start_time=now + timedelta(days=60))
+
+        self.url = reverse("tour-list")
+
+    def titles(self, response):
+        return {tour["title"] for tour in response.data}
+
+    def day(self, days_from_today):
+        return (timezone.localdate() + timedelta(days=days_from_today)).isoformat()
+
+    def test_filter_by_location(self):
+        """Only tours in the requested location are returned."""
+        response = self.client.get(self.url, {"location": self.alta.id})
+
+        self.assertEqual(self.titles(response), {"Husky Tour"})
+
+    def test_filter_by_max_price(self):
+        """Tours more expensive than max_price are excluded."""
+        response = self.client.get(self.url, {"max_price": 2000})
+
+        self.assertEqual(self.titles(response), {"Aurora Tour"})
+
+    def test_date_range_must_match_a_single_slot(self):
+        """A tour with slots only before and after the range is not returned."""
+        response = self.client.get(self.url, {"date_from": self.day(25), "date_to": self.day(35)})
+
+        self.assertEqual(self.titles(response), {"Husky Tour"})
+
+    def test_invalid_date_returns_400(self):
+        """A malformed date is rejected with a clear error."""
+        response = self.client.get(self.url, {"date_from": "tomorrow"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_lookup_lists_are_sorted_by_name(self):
+        """Locations and activity types come back in alphabetical order."""
+        locations = self.client.get(reverse("location-list")).data
+        activities = self.client.get(reverse("activity-type-list")).data
+
+        self.assertEqual([l["name"] for l in locations], ["Alta", "Tromsø"])
+        self.assertEqual([a["name"] for a in activities], ["Husky Safari", "Northern Lights Tour"])

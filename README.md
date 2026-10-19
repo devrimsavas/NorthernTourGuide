@@ -35,6 +35,8 @@ _Last updated: 2026-10-19_
 - [x] Reviews (only for confirmed bookings after the tour has ended)
 - [x] Public guide profiles for the frontend
 - [x] Image uploads for tours and guide profiles (cover image in the tour list, gallery in the tour detail)
+- [x] Tour filtering by location, activity type, difficulty, price and date range
+
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -92,6 +94,8 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 | GET             | `/api/auth/me/`                     | Authenticated | Details and role of the logged-in user                                |
 | GET             | `/api/guides/`                      | Public        | List guides with bio, languages and base location                     |
 | GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                         |
+| GET             | `/api/locations/`                   | Public        | List locations (for filter dropdowns)                                 |
+| GET             | `/api/activity-types/`              | Public        | List activity types (for filter dropdowns)                            |
 
 ## Filtering
 
@@ -147,6 +151,7 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
                                                                    |
 
 | `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
+| `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input) and sorted lookup lists |
 
 ### Why different test types?
 
@@ -166,5 +171,5 @@ Tests never call MET Norway or NOAA. `unittest.mock.patch` replaces the fetch fu
 
 ## Data Sources
 
-Weather data from [MET Norway](https://api.met.no/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-Kp index data from the [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/).
+- Weather data from [MET Norway](https://api.met.no/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- Kp index data from the [NOAA Space Weather Prediction Center](https://www.swpc.noaa.gov/).

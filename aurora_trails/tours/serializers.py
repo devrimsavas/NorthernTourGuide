@@ -2,7 +2,7 @@
 # like a DTO in ASP.NET which fields will be shown etc 
 # DRF ModelSerializer 
 from rest_framework import serializers
-from .models import Tour,TourSlot,TourImage
+from .models import Tour,TourSlot,TourImage,ActivityType,Location
 from django.utils import timezone
 
 
@@ -115,3 +115,15 @@ class GuideTourSlotSerializer(TourSlotSerializer):
         if value <= timezone.now():
             raise serializers.ValidationError("Slots must be scheduled in the future.")
         return value
+
+
+class ActivityTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActivityType
+        fields = ["id", "name", "description"]
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ["id", "name", "latitude", "longitude"]

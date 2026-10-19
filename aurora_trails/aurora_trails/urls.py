@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/auth/", include("accounts.api_urls")),
     path("api/guide/", include("tours.guide_api_urls")),
     path("api/guides/", include("accounts.guide_api_urls")),
+    path("api/", include("tours.lookup_api_urls")),
     
 
 ]

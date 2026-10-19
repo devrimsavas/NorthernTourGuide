@@ -16,8 +16,8 @@ from .aurora import aurora_chance,get_kp_forecast,kp_at
 
 #list api view imports
 from rest_framework import generics
-from .models import Tour,TourSlot
-from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer,GuideTourSlotSerializer
+from .models import Tour,TourSlot,ActivityType,Location
+from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer,GuideTourSlotSerializer,ActivityTypeSerializer,LocationSerializer
 from accounts.permissions import IsGuide
 from bookings.models import Review
 from bookings.serializers import ReviewSerializer
@@ -140,3 +140,13 @@ class TourReviewListView(generics.ListAPIView):
         return Review.objects.filter(booking__slot__tour_id=self.kwargs["pk"]).select_related(
             "booking__customer"
         )
+
+
+class ActivityTypeListView(generics.ListAPIView):
+    serializer_class = ActivityTypeSerializer
+    queryset = ActivityType.objects.order_by("name")
+
+
+class LocationListView(generics.ListAPIView):
+    serializer_class = LocationSerializer
+    queryset = Location.objects.order_by("name")
