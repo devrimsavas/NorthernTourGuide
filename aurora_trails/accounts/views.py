@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import MeSerializer, RegisterSerializer,GuideSerializer
 from rest_framework.response import Response
 from .models import User
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 #middleware
 
@@ -23,6 +24,7 @@ def accounts_main_page(request):
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+    throttle_scope="auth"
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -65,3 +67,6 @@ class GuideDetailView(generics.RetrieveAPIView):
     serializer_class = GuideSerializer
     permission_classes = [AllowAny]
     queryset = public_guides()
+
+class LoginView(TokenObtainPairView):
+    throttle_scope = "auth"

@@ -40,6 +40,7 @@ _Last updated: 2026-10-20_
 - [x] Booking actions for the frontend (`can_cancel`, `can_review`, `has_review`), sharing the same rules as the service layer
 - [x] OpenAPI documentation with Swagger UI and ReDoc, schema validated in CI
 - [x] Pagination for the tour list and reviews
+- [x] Rate limiting on login and registration
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -138,6 +139,7 @@ Parameters can be combined:
 ```
 GET /api/tours/?location=2&difficulty=easy&date_from=2026-12-01&date_to=2026-12-15
 ```
+
 ## Pagination
 
 The tour list and tour reviews are paginated (12 items per page by default). Use `page` and `page_size` (max 50):
@@ -156,6 +158,39 @@ GET /api/tours/?page=2&page_size=6
 ```
 
 Filters and pagination can be combined. Lookup lists (locations, activity types) are not paginated, since dropdowns need every item.
+
+## Rate Limiting
+
+Login and registration are rate limited to prevent brute-force password attempts and mass account creation. Limits use DRF's `ScopedRateThrottle` with an `auth` scope.
+
+| Endpoint                   | Limit                             |
+| -------------------------- | --------------------------------- |
+| `POST /api/auth/token/`    | 10 requests per minute per client |
+| `POST /api/auth/register/` | 10 requests per minute per client |
+
+When the limit is exceeded, the API returns `429 Too Many Requests` with the remaining wait time:
+
+```json
+{ "detail": "Request was throttled. Expected available in 58 seconds." }
+```
+
+### Trying it out
+
+PowerShell:
+
+```powershell
+1..11 | ForEach-Object { try { Invoke-RestMethod -Method Post -Uri http://localhost:8000/api/auth/token/ -ContentType "application/json" -Body '{"email":"x@test.no","password":"wrong"}' } catch { "$_ : $($_.Exception.Response.StatusCode.value__)" } }
+```
+
+Bash:
+
+```bash
+for i in $(seq 1 11); do curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8000/api/auth/token/ -H "Content-Type: application/json" -d '{"email":"x@test.no","password":"wrong"}'; done
+```
+
+The first 10 requests return `401`, the 11th returns `429`.
+
+> Request counts are stored in Django's cache. The default in-memory cache is per process, so a production deployment with several workers should use a shared cache such as Redis.
 
 ### Implementation notes
 
@@ -194,7 +229,7 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
 | `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input) and sorted lookup lists |
 | `GuideBookingApiTests` | `APITestCase` | Yes, rolled back per test | Guide booking list: only bookings for the guide's own tours, slot filter, customers rejected |
-| `TourFilterApiTests`   | `APITestCase`         | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input), pagination and sorted lookup lists                                    |
+| `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input), pagination and sorted lookup lists |
 
 ### Why different test types?
 
