@@ -12,7 +12,7 @@ This project is personal to me. As a developer with a background in Arctic touri
 
 ## Roadmap
 
-\_Last_updated :2026-10-18
+_Last updated: 2026-10-19_
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
@@ -27,10 +27,11 @@ This project is personal to me. As a developer with a background in Arctic touri
 - [x] REST API: booking cancellation by customers
 - [x] Role-based permissions and endpoints for guides
 - [x] Token-based authentication for the frontend
+- [x] Customer self-registration with automatic login (guides are added by admins only)
+- [x] Current user endpoint for role-based navigation in the frontend
 - [x] Weather and aurora forecast integration (MET Norway API)
 - [x] Aurora forecast (Kp index from NOAA, combined with cloud cover)
 - [x] Continuous integration with GitHub Actions (tests run against PostgreSQL on every push)
-
 - [x] Reviews (only for confirmed bookings after the tour has ended)
 - [ ] Angular frontend
 
@@ -80,10 +81,12 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 | GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide    | List slots or add a new slot to an own tour                       |
 | GET             | `/api/tours/<id>/reviews/`          | Public   | List reviews of a tour                                            |
 | POST            | `/api/bookings/<reference>/review/` | Customer | Review a finished tour (`rating`, `comment`)                      |
+| POST | `/api/auth/register/` | Public | Create a customer account, returns the user and access/refresh tokens |
+| GET | `/api/auth/me/` | Authenticated | Details and role of the logged-in user |
 
 ## Testing
 
-The project has 24 automated tests covering booking rules, permissions and external API integrations.
+The project has 29 automated tests covering booking rules, permissions and external API integrations.
 
 ```bash
 cd aurora_trails
@@ -100,9 +103,9 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `ReviewApiTests`       | `APITestCase`         | Yes, rolled back per test | Review rules: only the booking's customer, only confirmed and finished tours, one review per booking, rating 1-5, average rating in the tour list |
 | `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                                                                                      |
 | `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages                                                                      |
+| `RegisterApiTests`     | `APITestCase`         | Yes, rolled back per test | Self-registration: always a customer, case-insensitive unique email, password strength, tokens returned                                           |
+| `MeApiTests`           | `APITestCase`         | Yes, rolled back per test | Current user endpoint: returns details and role, requires authentication                                                                          |
 | `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                                                                                         |
-
-                                                                                       |
 
 ### Why different test types?
 
