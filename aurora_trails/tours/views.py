@@ -21,6 +21,8 @@ from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer
 from accounts.permissions import IsGuide
 from bookings.models import Review
 from bookings.serializers import ReviewSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import TourFilter
 
 # Create your views here.
 def tours_main_page(request):
@@ -29,10 +31,14 @@ def tours_main_page(request):
 
 class TourListView(generics.ListAPIView):
     serializer_class=TourSerializer
+    filter_backends=[DjangoFilterBackend]
+    filterset_class=TourFilter
+
     queryset=(Tour.objects.filter(is_active=True)
     .select_related("guide","activity_type","location")
     .with_ratings()
     .prefetch_related("images")
+    .order_by("title")
     )
 
 # tour detail

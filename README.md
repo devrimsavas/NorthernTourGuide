@@ -39,11 +39,15 @@ _Last updated: 2026-10-19_
 
 ## Tech Stack
 
-- Python 3.14
-- Django 6.1
-- PostgreSQL
+- Python 3.14, Django 6.1
+- Django REST Framework, Simple JWT
+- PostgreSQL (row locking with `select_for_update`)
+- django-filter, django-cors-headers, Pillow
+- requests (MET Norway and NOAA integrations)
+- GitHub Actions (CI with a PostgreSQL service container)
 
 ## Getting Started
+
 Uploaded images are stored in `aurora_trails/media/`, which is not committed to the repository. Upload tour and guide images through the Django admin.
 
 ```bash
@@ -89,6 +93,33 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 | GET             | `/api/guides/`                      | Public        | List guides with bio, languages and base location                     |
 | GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                         |
 
+## Filtering
+
+The tour list supports filtering through query parameters, built with [django-filter](https://django-filter.readthedocs.io/). Invalid values (an unknown location ID, a malformed date) return `400 Bad Request` with a clear error message. In the browsable API, the **Filters** button shows a form for all parameters.
+
+| Parameter       | Type                                  | Example                 | Description                                        |
+| --------------- | ------------------------------------- | ----------------------- | -------------------------------------------------- |
+| `location`      | ID                                    | `?location=2`           | Tours in a given location                          |
+| `activity_type` | ID                                    | `?activity_type=1`      | Tours of a given activity type                     |
+| `difficulty`    | `easy` \| `moderate` \| `challenging` | `?difficulty=easy`      | Tours with a given difficulty                      |
+| `max_price`     | Number (NOK)                          | `?max_price=2000`       | Tours with a price per person up to this amount    |
+| `date_from`     | Date (`YYYY-MM-DD`)                   | `?date_from=2026-12-01` | Tours with an upcoming slot on or after this date  |
+| `date_to`       | Date (`YYYY-MM-DD`)                   | `?date_to=2026-12-15`   | Tours with an upcoming slot on or before this date |
+
+Parameters can be combined:
+
+```
+GET /api/tours/?location=2&difficulty=easy&date_from=2026-12-01&date_to=2026-12-15
+```
+
+### Implementation notes
+
+- **Date range on the same slot:** `date_from` and `date_to` are evaluated together, so a tour matches only if a single slot falls inside the range. A tour with one slot before the range and another after it is not returned.
+- **Subquery instead of a join:** the date filter uses `id__in` with a subquery on tour slots. Joining slots directly would duplicate rows and distort the annotated `average_rating` and `review_count`.
+- **Only upcoming slots count:** past slots never make a tour match a date search.
+- **Time zone aware:** dates are compared in the configured time zone (`Europe/Oslo`), so a slot at 00:30 falls on the correct day.
+- **Stable ordering:** results are always sorted by title.
+
 ## Testing
 
 The project has 33 automated tests covering booking rules, permissions and external API integrations.
@@ -114,7 +145,8 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `GuideListApiTests`    | `APITestCase`         | Yes, rolled back per test | Public guide list: only active guides with a profile, no private data                                                                             |
 
                                                                    |
-| `TourImageApiTests`    | `APITestCase`         | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder                                             |
+
+| `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
 
 ### Why different test types?
 
