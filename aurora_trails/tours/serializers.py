@@ -2,8 +2,13 @@
 # like a DTO in ASP.NET which fields will be shown etc 
 # DRF ModelSerializer 
 from rest_framework import serializers
-from .models import Tour,TourSlot
+from .models import Tour,TourSlot,TourImage
 from django.utils import timezone
+
+
+
+
+
 
 class TourSerializer(serializers.ModelSerializer):
     guide=serializers.CharField(source="guide.get_full_name",read_only=True)
@@ -13,6 +18,7 @@ class TourSerializer(serializers.ModelSerializer):
         max_digits=3, decimal_places=1, coerce_to_string=False, read_only=True
     )
     review_count = serializers.IntegerField(read_only=True)
+    cover_image=serializers.SerializerMethodField()
 
 
     #models and fields in JSON 
@@ -31,8 +37,22 @@ class TourSerializer(serializers.ModelSerializer):
             "max_participants",
             "average_rating",
             "review_count",
+            "cover_image",
 
         ]
+    def get_cover_image(self, obj):
+        first = next(iter(obj.images.all()), None)
+        if first is None:
+            return None
+        request = self.context.get("request")
+        url = first.image.url
+        return request.build_absolute_uri(url) if request else url
+
+class TourImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TourImage
+        fields = ["image", "alt_text"]
+
 
 #tour slot serializer convert a slot to JSON 
 class TourSlotSerializer(serializers.ModelSerializer):
@@ -41,11 +61,16 @@ class TourSlotSerializer(serializers.ModelSerializer):
         model=TourSlot
         fields=["id","start_time","available_spots"]
 
+
+
+
 #tour details serializer 
 class TourDetailSerializer(TourSerializer):
     slots=TourSlotSerializer(many=True,read_only=True)
+    images=TourImageSerializer(many=True,read_only=True)
+
     class Meta(TourSerializer.Meta):
-        fields=TourSerializer.Meta.fields+["slots"]
+        fields=TourSerializer.Meta.fields+["slots","images"]
 
 
 #Guide tour serializer 

@@ -34,6 +34,7 @@ _Last updated: 2026-10-19_
 - [x] Continuous integration with GitHub Actions (tests run against PostgreSQL on every push)
 - [x] Reviews (only for confirmed bookings after the tour has ended)
 - [x] Public guide profiles for the frontend
+- [x] Image uploads for tours and guide profiles (cover image in the tour list, gallery in the tour detail)
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -43,6 +44,7 @@ _Last updated: 2026-10-19_
 - PostgreSQL
 
 ## Getting Started
+Uploaded images are stored in `aurora_trails/media/`, which is not committed to the repository. Upload tour and guide images through the Django admin.
 
 ```bash
 # Create and activate a virtual environment
@@ -89,7 +91,7 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 
 ## Testing
 
-The project has 30 automated tests covering booking rules, permissions and external API integrations.
+The project has 33 automated tests covering booking rules, permissions and external API integrations.
 
 ```bash
 cd aurora_trails
@@ -112,6 +114,7 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `GuideListApiTests`    | `APITestCase`         | Yes, rolled back per test | Public guide list: only active guides with a profile, no private data                                                                             |
 
                                                                    |
+| `TourImageApiTests`    | `APITestCase`         | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder                                             |
 
 ### Why different test types?
 

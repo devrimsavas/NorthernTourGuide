@@ -44,6 +44,7 @@ class GuideSerializer(serializers.ModelSerializer):
     base_location = serializers.CharField(
         source="guide_profile.base_location.name", read_only=True
     )
+    photo=serializers.ImageField(source="guide_profile.photo",read_only=True)
 
     class Meta:
         model = User
@@ -55,4 +56,5 @@ class GuideSerializer(serializers.ModelSerializer):
             "languages",
             "years_of_experience",
             "base_location",
+            "photo"
         ]

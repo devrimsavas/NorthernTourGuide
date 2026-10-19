@@ -34,6 +34,7 @@ class GuideProfile(models.Model):
         blank=True,
         related_name="guides"
     )
+    photo=models.ImageField(upload_to="guides/",blank=True)
 
     def __str__(self):
         return self.user.email

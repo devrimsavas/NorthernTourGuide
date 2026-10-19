@@ -156,3 +156,6 @@ REST_FRAMEWORK = {
 MET_NORWAY_USER_AGENT = "AuroraTrails/0.1 github.com/devrimsavas/NorthernTourGuide"
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"

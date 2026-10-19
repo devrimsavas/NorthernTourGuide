@@ -99,3 +99,15 @@ class TourSlot(models.Model):
     def available_spots(self):
         return self.tour.max_participants-self.booked_spots
 
+#tour image
+class TourImage(models.Model):
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="tours/")
+    alt_text = models.CharField(max_length=200, blank=True)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.tour.title} - image {self.order}"

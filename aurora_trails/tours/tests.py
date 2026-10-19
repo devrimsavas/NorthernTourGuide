@@ -10,7 +10,11 @@ from rest_framework.test import APITestCase
 from accounts.models import User
 from bookings.models import Booking
 
-from .models import ActivityType, Location, Tour, TourSlot
+from .models import ActivityType, Location, Tour, TourSlot,TourImage
+import shutil
+import tempfile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 
 from datetime import UTC
 
@@ -247,3 +251,72 @@ class AuroraChanceTests(SimpleTestCase):
 
     def test_missing_data_gives_no_chance(self):
         self.assertIsNone(aurora_chance(kp=None, cloud_area_fraction=20))   
+
+
+
+TINY_GIF = (
+    b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00"
+    b",\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+)
+
+
+def make_image(name):
+    return SimpleUploadedFile(name, TINY_GIF, content_type="image/gif")
+
+
+class TourImageApiTests(APITestCase):
+    """Tests for tour images: cover image in the list, all images in the detail."""
+
+    def setUp(self):
+        """Use a temporary media folder and create a tour with two images."""
+        media_dir = tempfile.mkdtemp()
+        media_override = override_settings(MEDIA_ROOT=media_dir)
+        media_override.enable()
+        self.addCleanup(media_override.disable)
+        self.addCleanup(shutil.rmtree, media_dir, ignore_errors=True)
+
+        guide = User.objects.create_user(
+            username="guide", email="guide@test.no", password="testpass123", role=User.Role.GUIDE
+        )
+        activity = ActivityType.objects.create(name="Husky Safari")
+        location = Location.objects.create(name="Alta", latitude=69.9689, longitude=23.2717)
+        tour_data = {
+            "guide": guide,
+            "activity_type": activity,
+            "location": location,
+            "description": "Test description",
+            "duration_minutes": 120,
+            "price": 1000,
+            "max_participants": 8,
+        }
+        self.tour = Tour.objects.create(title="Tour With Images", **tour_data)
+        self.tour_without_images = Tour.objects.create(title="Tour Without Images", **tour_data)
+
+        TourImage.objects.create(tour=self.tour, image=make_image("second.gif"), order=1)
+        TourImage.objects.create(tour=self.tour, image=make_image("cover.gif"), order=0)
+
+    def find_tour(self, response, tour):
+        return next(t for t in response.data if t["id"] == tour.id)
+
+    def test_cover_image_is_the_first_image_by_order(self):
+        """The cover is the image with the lowest order, returned as a full URL."""
+        response = self.client.get(reverse("tour-list"))
+
+        cover = self.find_tour(response, self.tour)["cover_image"]
+        self.assertTrue(cover.startswith("http://testserver/media/tours/"))
+        self.assertIn("cover", cover)
+
+    def test_cover_image_is_null_without_images(self):
+        """A tour without images has no cover image."""
+        response = self.client.get(reverse("tour-list"))
+
+        self.assertIsNone(self.find_tour(response, self.tour_without_images)["cover_image"])
+
+    def test_detail_lists_all_images_in_order(self):
+        """The tour detail returns every image, sorted by order."""
+        response = self.client.get(reverse("tour-detail", args=[self.tour.id]))
+
+        images = response.data["images"]
+        self.assertEqual(len(images), 2)
+        self.assertIn("cover", images[0]["image"])
+        self.assertIn("second", images[1]["image"])

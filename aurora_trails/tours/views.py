@@ -32,6 +32,7 @@ class TourListView(generics.ListAPIView):
     queryset=(Tour.objects.filter(is_active=True)
     .select_related("guide","activity_type","location")
     .with_ratings()
+    .prefetch_related("images")
     )
 
 # tour detail
@@ -43,7 +44,7 @@ class TourDetailView(generics.RetrieveAPIView):
             Tour.objects.filter(is_active=True)
             .select_related("guide", "activity_type", "location")
             .with_ratings()
-            .prefetch_related(Prefetch("slots", queryset=upcoming_slots))
+            .prefetch_related(Prefetch("slots", queryset=upcoming_slots),"images")
 
         )
 
