@@ -238,6 +238,29 @@ class ReviewApiTests(APITestCase):
         tour = next(t for t in response.data if t["id"] == self.tour.id)
         self.assertEqual(tour["average_rating"], 4.5)
         self.assertEqual(tour["review_count"], 2)
+        
+    def test_my_bookings_show_available_actions(self):
+        """Each booking in the customer's list says whether it can be cancelled or reviewed."""
+        def find(response, booking):
+            return next(b for b in response.data if b["reference"] == str(booking.reference))
+
+        response = self.client.get(reverse("my-bookings"))
+
+        upcoming = find(response, self.upcoming_booking)
+        self.assertTrue(upcoming["can_cancel"])
+        self.assertFalse(upcoming["can_review"])
+
+        finished = find(response, self.finished_booking)
+        self.assertFalse(finished["can_cancel"])
+        self.assertTrue(finished["can_review"])
+        self.assertFalse(finished["has_review"])
+
+        Review.objects.create(booking=self.finished_booking, rating=5)
+        response = self.client.get(reverse("my-bookings"))
+
+        finished = find(response, self.finished_booking)
+        self.assertTrue(finished["has_review"])
+        self.assertFalse(finished["can_review"])
 
 
 class GuideBookingApiTests(APITestCase):

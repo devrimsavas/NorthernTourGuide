@@ -1,3 +1,4 @@
+from .services import cancel_error, has_review, review_error
 from django.utils import timezone
 from rest_framework import serializers
 #models 
@@ -21,11 +22,35 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
 #customer can see his own tours and date
 class BookingListSerializer(serializers.ModelSerializer):
-    tour=serializers.CharField(source="slot.tour.title",read_only=True)
-    start_time=serializers.DateTimeField(source="slot.start_time", read_only=True)
+    tour = serializers.CharField(source="slot.tour.title", read_only=True)
+    start_time = serializers.DateTimeField(source="slot.start_time", read_only=True)
+    has_review = serializers.SerializerMethodField()
+    can_review = serializers.SerializerMethodField()
+    can_cancel = serializers.SerializerMethodField()
+
     class Meta:
-        model=Booking
-        fields=["reference", "tour", "start_time", "participants", "total_price", "status", "created_at"]
+        model = Booking
+        fields = [
+            "reference",
+            "tour",
+            "start_time",
+            "participants",
+            "total_price",
+            "status",
+            "created_at",
+            "has_review",
+            "can_review",
+            "can_cancel",
+        ]
+
+    def get_has_review(self, obj):
+        return has_review(obj)
+
+    def get_can_review(self, obj):
+        return review_error(obj) is None
+
+    def get_can_cancel(self, obj):
+        return cancel_error(obj) is None
 
 
 #customers' review it will show only customer's name and country (i mean tourist, visitor )

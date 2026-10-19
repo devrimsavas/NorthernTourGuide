@@ -37,6 +37,7 @@ _Last updated: 2026-10-19_
 - [x] Image uploads for tours and guide profiles (cover image in the tour list, gallery in the tour detail)
 - [x] Tour filtering by location, activity type, difficulty, price and date range
 - [x] Guide view of bookings for their own tours (customer contact details for operational use)
+- [x] Booking actions for the frontend (`can_cancel`, `can_review`, `has_review`), sharing the same rules as the service layer
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -75,28 +76,28 @@ python manage.py runserver
 
 Authenticated endpoints require an `Authorization: Bearer <access_token>` header.
 
-| Method          | Endpoint                            | Access        | Description                                                           |
-| --------------- | ----------------------------------- | ------------- | --------------------------------------------------------------------- |
-| POST            | `/api/auth/token/`                  | Public        | Log in with email and password, returns access and refresh tokens     |
-| POST            | `/api/auth/token/refresh/`          | Public        | Get a new access token using a refresh token                          |
-| GET             | `/api/tours/`                       | Public        | List active tours                                                     |
-| GET             | `/api/tours/<id>/`                  | Public        | Tour details with upcoming slots and available spots                  |
-| GET             | `/api/tours/<id>/forecast/`         | Public        | Weather forecast for each upcoming slot (MET Norway)                  |
-| POST            | `/api/bookings/`                    | Customer      | Create a booking (`slot`, `participants`)                             |
-| GET             | `/api/bookings/me/`                 | Customer      | List the logged-in customer's bookings                                |
-| POST            | `/api/bookings/<reference>/cancel/` | Customer      | Cancel a booking                                                      |
-| GET, POST       | `/api/guide/tours/`                 | Guide         | List own tours or create a new tour                                   |
-| GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide         | View or update an own tour                                            |
-| GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide         | List slots or add a new slot to an own tour                           |
-| GET             | `/api/tours/<id>/reviews/`          | Public        | List reviews of a tour                                                |
-| POST            | `/api/bookings/<reference>/review/` | Customer      | Review a finished tour (`rating`, `comment`)                          |
-| POST            | `/api/auth/register/`               | Public        | Create a customer account, returns the user and access/refresh tokens |
-| GET             | `/api/auth/me/`                     | Authenticated | Details and role of the logged-in user                                |
-| GET             | `/api/guides/`                      | Public        | List guides with bio, languages and base location                     |
-| GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                         |
-| GET             | `/api/locations/`                   | Public        | List locations (for filter dropdowns)                                 |
-| GET             | `/api/activity-types/`              | Public        | List activity types (for filter dropdowns)                            |
-| GET             | `/api/guide/bookings/`              | Guide         | Bookings for own tours, filterable by `slot` and `status`             |
+| Method          | Endpoint                            | Access        | Description                                                                                    |
+| --------------- | ----------------------------------- | ------------- | ---------------------------------------------------------------------------------------------- |
+| POST            | `/api/auth/token/`                  | Public        | Log in with email and password, returns access and refresh tokens                              |
+| POST            | `/api/auth/token/refresh/`          | Public        | Get a new access token using a refresh token                                                   |
+| GET             | `/api/tours/`                       | Public        | List active tours                                                                              |
+| GET             | `/api/tours/<id>/`                  | Public        | Tour details with upcoming slots and available spots                                           |
+| GET             | `/api/tours/<id>/forecast/`         | Public        | Weather forecast for each upcoming slot (MET Norway)                                           |
+| POST            | `/api/bookings/`                    | Customer      | Create a booking (`slot`, `participants`)                                                      |
+| GET             | `/api/bookings/me/`                 | Customer      | List the logged-in customer's bookings, with `can_cancel`, `can_review` and `has_review` flags |
+| POST            | `/api/bookings/<reference>/cancel/` | Customer      | Cancel a booking                                                                               |
+| GET, POST       | `/api/guide/tours/`                 | Guide         | List own tours or create a new tour                                                            |
+| GET, PUT, PATCH | `/api/guide/tours/<id>/`            | Guide         | View or update an own tour                                                                     |
+| GET, POST       | `/api/guide/tours/<id>/slots/`      | Guide         | List slots or add a new slot to an own tour                                                    |
+| GET             | `/api/tours/<id>/reviews/`          | Public        | List reviews of a tour                                                                         |
+| POST            | `/api/bookings/<reference>/review/` | Customer      | Review a finished tour (`rating`, `comment`)                                                   |
+| POST            | `/api/auth/register/`               | Public        | Create a customer account, returns the user and access/refresh tokens                          |
+| GET             | `/api/auth/me/`                     | Authenticated | Details and role of the logged-in user                                                         |
+| GET             | `/api/guides/`                      | Public        | List guides with bio, languages and base location                                              |
+| GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                                                  |
+| GET             | `/api/locations/`                   | Public        | List locations (for filter dropdowns)                                                          |
+| GET             | `/api/activity-types/`              | Public        | List activity types (for filter dropdowns)                                                     |
+| GET             | `/api/guide/bookings/`              | Guide         | Bookings for own tours, filterable by `slot` and `status`                                      |
 
 ## Filtering
 

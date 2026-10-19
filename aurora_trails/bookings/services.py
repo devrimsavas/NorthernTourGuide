@@ -29,28 +29,48 @@ def create_booking(customer,slot_id,participants):
             status=Booking.Status.CONFIRMED,
         )
 
-# cancel reservation soft delete 
-def cancel_booking(booking):
-    if booking.status == Booking.Status.CANCELLED:
-        raise ValidationError({"status": "This booking is already cancelled."})
+def tour_has_ended(booking):
+    tour_end = booking.slot.start_time + timedelta(minutes=booking.slot.tour.duration_minutes)
+    return tour_end <= timezone.now()
 
+
+def has_review(booking):
+    return hasattr(booking, "review")
+
+
+def cancel_error(booking):
+    """Return why the booking cannot be cancelled, or None if it can."""
+    if booking.status == Booking.Status.CANCELLED:
+        return "This booking is already cancelled."
     if booking.slot.start_time <= timezone.now():
-        raise ValidationError({"status": "Bookings cannot be cancelled after the tour has started."})
+        return "Bookings cannot be cancelled after the tour has started."
+    return None
+
+
+def review_error(booking):
+    """Return why the booking cannot be reviewed, or None if it can."""
+    if booking.status != Booking.Status.CONFIRMED:
+        return "Only confirmed bookings can be reviewed."
+    if not tour_has_ended(booking):
+        return "You can review a tour only after it has ended."
+    if has_review(booking):
+        return "This booking has already been reviewed."
+    return None
+
+
+def cancel_booking(booking):
+    error = cancel_error(booking)
+    if error:
+        raise ValidationError({"status": error})
 
     booking.status = Booking.Status.CANCELLED
     booking.save(update_fields=["status"])
     return booking
 
-#create review 
+
 def create_review(booking, rating, comment=""):
-    if booking.status != Booking.Status.CONFIRMED:
-        raise ValidationError({"booking": "Only confirmed bookings can be reviewed."})
-
-    tour_end = booking.slot.start_time + timedelta(minutes=booking.slot.tour.duration_minutes)
-    if tour_end > timezone.now():
-        raise ValidationError({"booking": "You can review a tour only after it has ended."})
-
-    if Review.objects.filter(booking=booking).exists():
-        raise ValidationError({"booking": "This booking has already been reviewed."})
+    error = review_error(booking)
+    if error:
+        raise ValidationError({"booking": error})
 
     return Review.objects.create(booking=booking, rating=rating, comment=comment)

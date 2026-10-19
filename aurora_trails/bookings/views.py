@@ -39,7 +39,7 @@ class MyBookingListView(generics.ListAPIView):
     permission_classes = [IsCustomer]
 
     def get_queryset(self):
-        return Booking.objects.filter(customer=self.request.user).select_related("slot__tour")
+        return Booking.objects.filter(customer=self.request.user).select_related("slot__tour","review")
 
 
 class BookingCancelView(APIView):
