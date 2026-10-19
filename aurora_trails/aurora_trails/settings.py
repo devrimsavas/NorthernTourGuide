@@ -44,10 +44,12 @@ INSTALLED_APPS = [
     'accounts',
     'tours',
     'bookings',
-    'rest_framework'
+    'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -152,3 +154,5 @@ REST_FRAMEWORK = {
 
 # MET API 
 MET_NORWAY_USER_AGENT = "AuroraTrails/0.1 github.com/devrimsavas/NorthernTourGuide"
+
+CORS_ALLOW_ALL_ORIGINS = DEBUG
