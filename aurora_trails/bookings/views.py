@@ -2,10 +2,11 @@ from django.shortcuts import render
 from django.http import HttpRequest ,JsonResponse
 from django.template import loader 
 from rest_framework import generics
+from django_filters.rest_framework import DjangoFilterBackend
 
-from accounts.permissions import IsCustomer
+from accounts.permissions import IsCustomer,IsGuide
 from .models import Booking
-from .serializers import BookingCreateSerializer,BookingListSerializer,ReviewCreateSerializer
+from .serializers import BookingCreateSerializer,BookingListSerializer,ReviewCreateSerializer,GuideBookingSerializer
 
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
@@ -68,4 +69,17 @@ class BookingReviewCreateView(generics.CreateAPIView):
             booking,
             rating=serializer.validated_data["rating"],
             comment=serializer.validated_data.get("comment", ""),
+        )
+
+class GuideBookingListView(generics.ListAPIView):
+    serializer_class = GuideBookingSerializer
+    permission_classes = [IsGuide]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["slot", "status"]
+
+    def get_queryset(self):
+        return (
+            Booking.objects.filter(slot__tour__guide=self.request.user)
+            .select_related("slot__tour", "customer")
+            .order_by("slot__start_time", "created_at")
         )

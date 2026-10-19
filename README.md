@@ -36,7 +36,7 @@ _Last updated: 2026-10-19_
 - [x] Public guide profiles for the frontend
 - [x] Image uploads for tours and guide profiles (cover image in the tour list, gallery in the tour detail)
 - [x] Tour filtering by location, activity type, difficulty, price and date range
-
+- [x] Guide view of bookings for their own tours (customer contact details for operational use)
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -96,6 +96,7 @@ Authenticated endpoints require an `Authorization: Bearer <access_token>` header
 | GET             | `/api/guides/<id>/`                 | Public        | Guide details                                                         |
 | GET             | `/api/locations/`                   | Public        | List locations (for filter dropdowns)                                 |
 | GET             | `/api/activity-types/`              | Public        | List activity types (for filter dropdowns)                            |
+| GET             | `/api/guide/bookings/`              | Guide         | Bookings for own tours, filterable by `slot` and `status`             |
 
 ## Filtering
 
@@ -152,6 +153,7 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 
 | `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
 | `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input) and sorted lookup lists |
+| `GuideBookingApiTests` | `APITestCase` | Yes, rolled back per test | Guide booking list: only bookings for the guide's own tours, slot filter, customers rejected |
 
 ### Why different test types?
 

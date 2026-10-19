@@ -238,3 +238,73 @@ class ReviewApiTests(APITestCase):
         tour = next(t for t in response.data if t["id"] == self.tour.id)
         self.assertEqual(tour["average_rating"], 4.5)
         self.assertEqual(tour["review_count"], 2)
+
+
+class GuideBookingApiTests(APITestCase):
+    """Tests for the guide's booking list: own tours only, slot filter, guide role required."""
+
+    def setUp(self):
+        """Create two guides with one tour each, and bookings on both tours."""
+        self.kari = User.objects.create_user(
+            username="kari", email="kari@test.no", password="testpass123", role=User.Role.GUIDE
+        )
+        ola = User.objects.create_user(
+            username="ola", email="ola@test.no", password="testpass123", role=User.Role.GUIDE
+        )
+        self.customer = User.objects.create_user(
+            username="lukas", email="lukas@test.no", password="testpass123",
+            role=User.Role.CUSTOMER, first_name="Lukas", last_name="Weber",
+        )
+        activity = ActivityType.objects.create(name="Husky Safari")
+        location = Location.objects.create(name="Alta", latitude=69.9689, longitude=23.2717)
+        tour_data = {
+            "activity_type": activity,
+            "location": location,
+            "description": "Test description",
+            "duration_minutes": 120,
+            "price": 1000,
+            "max_participants": 8,
+        }
+        kari_tour = Tour.objects.create(guide=self.kari, title="Kari's Tour", **tour_data)
+        ola_tour = Tour.objects.create(guide=ola, title="Ola's Tour", **tour_data)
+
+        now = timezone.now()
+        self.kari_slot_1 = TourSlot.objects.create(tour=kari_tour, start_time=now + timedelta(days=5))
+        kari_slot_2 = TourSlot.objects.create(tour=kari_tour, start_time=now + timedelta(days=6))
+        ola_slot = TourSlot.objects.create(tour=ola_tour, start_time=now + timedelta(days=5))
+
+        for slot in (self.kari_slot_1, kari_slot_2, ola_slot):
+            Booking.objects.create(
+                slot=slot, customer=self.customer, participants=2,
+                total_price=2000, status=Booking.Status.CONFIRMED,
+            )
+
+        self.url = reverse("guide-booking-list")
+
+    def test_guide_sees_only_bookings_for_own_tours(self):
+        """Bookings on another guide's tours are not visible."""
+        self.client.force_authenticate(user=self.kari)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual({b["tour"] for b in response.data}, {"Kari's Tour"})
+        self.assertEqual(response.data[0]["customer_name"], "Lukas Weber")
+
+    def test_filter_by_slot(self):
+        """The slot filter narrows the list to one slot."""
+        self.client.force_authenticate(user=self.kari)
+
+        response = self.client.get(self.url, {"slot": self.kari_slot_1.id})
+
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["slot"], self.kari_slot_1.id)
+
+    def test_customer_cannot_access_guide_bookings(self):
+        """Customers are rejected by the guide booking list."""
+        self.client.force_authenticate(user=self.customer)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

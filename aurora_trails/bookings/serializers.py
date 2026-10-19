@@ -43,3 +43,23 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ["id", "reviewer", "rating", "comment", "created_at"]
+
+class GuideBookingSerializer(serializers.ModelSerializer):
+    tour = serializers.CharField(source="slot.tour.title", read_only=True)
+    start_time = serializers.DateTimeField(source="slot.start_time", read_only=True)
+    customer_name = serializers.CharField(source="customer.get_full_name", read_only=True)
+    customer_email = serializers.EmailField(source="customer.email", read_only=True)
+
+    class Meta:
+        model = Booking
+        fields = [
+            "reference",
+            "tour",
+            "slot",
+            "start_time",
+            "customer_name",
+            "customer_email",
+            "participants",
+            "status",
+            "created_at",
+        ]
