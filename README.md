@@ -71,7 +71,24 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+## API Documentation
 
+Interactive API documentation is generated automatically from the code with [drf-spectacular](https://drf-spectacular.readthedocs.io/) (OpenAPI 3).
+
+| URL | Description |
+|---|---|
+| `/api/docs/` | Swagger UI: browse and try every endpoint |
+| `/api/redoc/` | ReDoc: read-only reference documentation |
+| `/api/schema/` | Raw OpenAPI schema (YAML), for client code generation |
+
+### Trying authenticated endpoints in Swagger
+
+1. Call `POST /api/auth/token/` with an email and password
+2. Copy the `access` token from the response
+3. Click **Authorize** and paste the token
+4. Customer and guide endpoints can now be called directly from the page
+
+The schema can also be used to generate a typed frontend client, for example with `ng-openapi-gen` for Angular.
 ## API Endpoints
 
 Authenticated endpoints require an `Authorization: Bearer <access_token>` header.

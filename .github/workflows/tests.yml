@@ -40,8 +40,12 @@ jobs:
           python-version: "3.14"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install dependencies      
         run: pip install -r requirements.txt
+        
+      - name: Validate API schema
+        run: python manage.py spectacular --validate --fail-on-warn --file schema.yml
+        working-directory: aurora_trails
 
       - name: Run tests
         run: python manage.py test -v 2

@@ -43,13 +43,13 @@ class BookingListSerializer(serializers.ModelSerializer):
             "can_cancel",
         ]
 
-    def get_has_review(self, obj):
+    def get_has_review(self, obj)->bool:
         return has_review(obj)
 
-    def get_can_review(self, obj):
+    def get_can_review(self, obj)->bool:
         return review_error(obj) is None
 
-    def get_can_cancel(self, obj):
+    def get_can_cancel(self, obj)->bool:
         return cancel_error(obj) is None
 
 

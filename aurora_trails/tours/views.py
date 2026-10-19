@@ -17,7 +17,8 @@ from .aurora import aurora_chance,get_kp_forecast,kp_at
 #list api view imports
 from rest_framework import generics
 from .models import Tour,TourSlot,ActivityType,Location
-from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer,GuideTourSlotSerializer,ActivityTypeSerializer,LocationSerializer
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from .serializers import TourSerializer,TourDetailSerializer,GuideTourSerializer,GuideTourSlotSerializer,ActivityTypeSerializer,LocationSerializer,TourForecastSerializer
 from accounts.permissions import IsGuide
 from bookings.models import Review
 from bookings.serializers import ReviewSerializer
@@ -92,6 +93,12 @@ class GuideTourSlotListCreateView(generics.ListCreateAPIView):
 
 
 class TourForecastView(APIView):
+    @extend_schema(
+        responses={
+            200: TourForecastSerializer,
+            503: OpenApiResponse(description="Weather forecast is temporarily unavailable."),
+        }
+    )
     def get(self, request, pk):
         tour = get_object_or_404(Tour.objects.select_related("location"), pk=pk, is_active=True)
         upcoming_slots = tour.slots.filter(start_time__gte=timezone.now())

@@ -40,7 +40,7 @@ class TourSerializer(serializers.ModelSerializer):
             "cover_image",
 
         ]
-    def get_cover_image(self, obj):
+    def get_cover_image(self, obj)->str | None:
         first = next(iter(obj.images.all()), None)
         if first is None:
             return None
@@ -127,3 +127,30 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ["id", "name", "latitude", "longitude"]
+
+
+class WeatherForecastSerializer(serializers.Serializer):
+    time = serializers.DateTimeField()
+    air_temperature = serializers.FloatField(allow_null=True)
+    cloud_area_fraction = serializers.FloatField(allow_null=True)
+    wind_speed = serializers.FloatField(allow_null=True)
+    symbol_code = serializers.CharField(allow_null=True)
+
+
+class AuroraForecastSerializer(serializers.Serializer):
+    kp = serializers.FloatField()
+    chance = serializers.ChoiceField(choices=["low", "medium", "high"], allow_null=True)
+
+
+class SlotForecastSerializer(serializers.Serializer):
+    slot_id = serializers.IntegerField()
+    start_time = serializers.DateTimeField()
+    forecast = WeatherForecastSerializer(allow_null=True)
+    aurora = AuroraForecastSerializer(allow_null=True)
+
+
+class TourForecastSerializer(serializers.Serializer):
+    location = serializers.CharField()
+    sources = serializers.ListField(child=serializers.CharField())
+    slots = SlotForecastSerializer(many=True)
+    

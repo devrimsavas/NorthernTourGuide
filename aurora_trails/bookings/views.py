@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .services import cancel_booking, create_booking,create_review
+from drf_spectacular.utils import extend_schema
 
 
 # Create your views here.
@@ -44,7 +45,7 @@ class MyBookingListView(generics.ListAPIView):
 
 class BookingCancelView(APIView):
     permission_classes = [IsCustomer]
-
+    @extend_schema(request=None,responses=BookingListSerializer)
     def post(self, request, reference):
         booking = get_object_or_404(
             Booking.objects.select_related("slot__tour"),
@@ -78,6 +79,8 @@ class GuideBookingListView(generics.ListAPIView):
     filterset_fields = ["slot", "status"]
 
     def get_queryset(self):
+        if getattr(self,"swagger_fake_view",False):
+            return Booking.objects.none()
         return (
             Booking.objects.filter(slot__tour__guide=self.request.user)
             .select_related("slot__tour", "customer")
