@@ -296,7 +296,7 @@ class TourImageApiTests(APITestCase):
         TourImage.objects.create(tour=self.tour, image=make_image("cover.gif"), order=0)
 
     def find_tour(self, response, tour):
-        return next(t for t in response.data if t["id"] == tour.id)
+        return next(t for t in response.data["results"] if t["id"] == tour.id)
 
     def test_cover_image_is_the_first_image_by_order(self):
         """The cover is the image with the lowest order, returned as a full URL."""
@@ -352,7 +352,7 @@ class TourFilterApiTests(APITestCase):
         self.url = reverse("tour-list")
 
     def titles(self, response):
-        return {tour["title"] for tour in response.data}
+        return {tour["title"] for tour in response.data["results"]}
 
     def day(self, days_from_today):
         return (timezone.localdate() + timedelta(days=days_from_today)).isoformat()
@@ -388,3 +388,12 @@ class TourFilterApiTests(APITestCase):
 
         self.assertEqual([l["name"] for l in locations], ["Alta", "Tromsø"])
         self.assertEqual([a["name"] for a in activities], ["Husky Safari", "Northern Lights Tour"])
+
+    def test_tour_list_is_paginated(self):
+        """The tour list returns pages with a total count and a link to the next page."""
+        response = self.client.get(self.url, {"page_size": 1})
+
+        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertIsNotNone(response.data["next"])
+        self.assertIsNone(response.data["previous"])

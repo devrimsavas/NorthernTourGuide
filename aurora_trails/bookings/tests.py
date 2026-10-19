@@ -178,9 +178,11 @@ class ReviewApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         public = self.client.get(reverse("tour-reviews", args=[self.tour.id]))
-        self.assertEqual(len(public.data), 1)
-        self.assertEqual(public.data[0]["reviewer"], "Lukas")
-        self.assertEqual(public.data[0]["rating"], 5)
+        results=public.data["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["reviewer"], "Lukas")
+        self.assertEqual(results[0]["rating"], 5)
+
 
     def test_cannot_review_before_tour_ends(self):
         """A tour that has not ended yet cannot be reviewed."""
@@ -235,10 +237,10 @@ class ReviewApiTests(APITestCase):
 
         response = self.client.get(reverse("tour-list"))
 
-        tour = next(t for t in response.data if t["id"] == self.tour.id)
+        tour = next(t for t in response.data["results"] if t["id"] == self.tour.id)
         self.assertEqual(tour["average_rating"], 4.5)
         self.assertEqual(tour["review_count"], 2)
-        
+
     def test_my_bookings_show_available_actions(self):
         """Each booking in the customer's list says whether it can be cancelled or reviewed."""
         def find(response, booking):

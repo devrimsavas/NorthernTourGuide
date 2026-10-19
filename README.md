@@ -12,7 +12,7 @@ This project is personal to me. As a developer with a background in Arctic touri
 
 ## Roadmap
 
-_Last updated: 2026-10-19_
+_Last updated: 2026-10-20_
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
@@ -38,6 +38,8 @@ _Last updated: 2026-10-19_
 - [x] Tour filtering by location, activity type, difficulty, price and date range
 - [x] Guide view of bookings for their own tours (customer contact details for operational use)
 - [x] Booking actions for the frontend (`can_cancel`, `can_review`, `has_review`), sharing the same rules as the service layer
+- [x] OpenAPI documentation with Swagger UI and ReDoc, schema validated in CI
+- [x] Pagination for the tour list and reviews
 - [ ] Angular frontend
 
 ## Tech Stack
@@ -71,14 +73,15 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+
 ## API Documentation
 
 Interactive API documentation is generated automatically from the code with [drf-spectacular](https://drf-spectacular.readthedocs.io/) (OpenAPI 3).
 
-| URL | Description |
-|---|---|
-| `/api/docs/` | Swagger UI: browse and try every endpoint |
-| `/api/redoc/` | ReDoc: read-only reference documentation |
+| URL            | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| `/api/docs/`   | Swagger UI: browse and try every endpoint             |
+| `/api/redoc/`  | ReDoc: read-only reference documentation              |
 | `/api/schema/` | Raw OpenAPI schema (YAML), for client code generation |
 
 ### Trying authenticated endpoints in Swagger
@@ -89,6 +92,7 @@ Interactive API documentation is generated automatically from the code with [drf
 4. Customer and guide endpoints can now be called directly from the page
 
 The schema can also be used to generate a typed frontend client, for example with `ng-openapi-gen` for Angular.
+
 ## API Endpoints
 
 Authenticated endpoints require an `Authorization: Bearer <access_token>` header.
@@ -134,6 +138,24 @@ Parameters can be combined:
 ```
 GET /api/tours/?location=2&difficulty=easy&date_from=2026-12-01&date_to=2026-12-15
 ```
+## Pagination
+
+The tour list and tour reviews are paginated (12 items per page by default). Use `page` and `page_size` (max 50):
+
+```
+GET /api/tours/?page=2&page_size=6
+```
+
+```json
+{
+  "count": 37,
+  "next": "http://localhost:8000/api/tours/?page=3&page_size=6",
+  "previous": "http://localhost:8000/api/tours/?page=1&page_size=6",
+  "results": [ ... ]
+}
+```
+
+Filters and pagination can be combined. Lookup lists (locations, activity types) are not paginated, since dropdowns need every item.
 
 ### Implementation notes
 
@@ -172,6 +194,7 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 | `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
 | `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input) and sorted lookup lists |
 | `GuideBookingApiTests` | `APITestCase` | Yes, rolled back per test | Guide booking list: only bookings for the guide's own tours, slot filter, customers rejected |
+| `TourFilterApiTests`   | `APITestCase`         | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input), pagination and sorted lookup lists                                    |
 
 ### Why different test types?
 

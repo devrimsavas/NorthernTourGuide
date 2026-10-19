@@ -9,11 +9,8 @@ import requests
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from .weather import forecast_at, get_forecast
 from .aurora import aurora_chance,get_kp_forecast,kp_at
-
-
 #list api view imports
 from rest_framework import generics
 from .models import Tour,TourSlot,ActivityType,Location
@@ -24,6 +21,7 @@ from bookings.models import Review
 from bookings.serializers import ReviewSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import TourFilter
+from .pagination import StandardPagination
 
 # Create your views here.
 def tours_main_page(request):
@@ -41,6 +39,7 @@ class TourListView(generics.ListAPIView):
     .prefetch_related("images")
     .order_by("title")
     )
+    pagination_class=StandardPagination
 
 # tour detail
 class TourDetailView(generics.RetrieveAPIView):
@@ -147,6 +146,7 @@ class TourReviewListView(generics.ListAPIView):
         return Review.objects.filter(booking__slot__tour_id=self.kwargs["pk"]).select_related(
             "booking__customer"
         )
+    pagination_class=StandardPagination
 
 
 class ActivityTypeListView(generics.ListAPIView):
