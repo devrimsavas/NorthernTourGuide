@@ -1,0 +1,239 @@
+<!-- Page header -->
+<section class="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+  <div class="mx-auto max-w-6xl px-4 py-12">
+    <p class="text-sm font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+      Tours
+    </p>
+    <h1 class="mt-2 text-3xl font-bold sm:text-4xl">Find your Arctic adventure</h1>
+    <p class="mt-3 max-w-2xl text-slate-600 dark:text-slate-400">
+      Filter by location, activity, date or price. Availability is updated in real time.
+    </p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-6xl px-4 py-10">
+  <!-- Filters -->
+  <div
+    class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-6 dark:border-slate-800 dark:bg-slate-900"
+  >
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">Location</span>
+      <select
+        (change)="onFilterChange('location', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      >
+        <option value="">All locations</option>
+        @for (location of locations(); track location.id) {
+          <option [value]="location.id" [selected]="filters().location === location.id">
+            {{ location.name }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">Activity</span>
+      <select
+        (change)="onFilterChange('activity_type', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      >
+        <option value="">All activities</option>
+        @for (activity of activityTypes(); track activity.id) {
+          <option [value]="activity.id" [selected]="filters().activity_type === activity.id">
+            {{ activity.name }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">Difficulty</span>
+      <select
+        (change)="onFilterChange('difficulty', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      >
+        <option value="">Any difficulty</option>
+        @for (difficulty of difficulties; track difficulty) {
+          <option [value]="difficulty" [selected]="filters().difficulty === difficulty">
+            {{ difficulty.charAt(0).toUpperCase() + difficulty.slice(1) }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">Max price (NOK)</span>
+      <input
+        type="number"
+        min="0"
+        step="100"
+        placeholder="Any"
+        [value]="filters().max_price ?? ''"
+        (change)="onFilterChange('max_price', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      />
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">From</span>
+      <input
+        type="date"
+        [value]="filters().date_from ?? ''"
+        (change)="onFilterChange('date_from', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      />
+    </label>
+
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="font-medium text-slate-700 dark:text-slate-300">To</span>
+      <input
+        type="date"
+        [value]="filters().date_to ?? ''"
+        (change)="onFilterChange('date_to', $event)"
+        class="rounded-lg border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-950"
+      />
+    </label>
+  </div>
+
+  <!-- Result info -->
+  <div class="mt-6 flex min-h-8 items-center justify-between gap-4">
+    @if (state(); as current) {
+      @if (current.status === 'loaded') {
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          {{ current.page.count }} {{ current.page.count === 1 ? 'tour' : 'tours' }} found
+        </p>
+      }
+    }
+    @if (hasActiveFilters()) {
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="ml-auto text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+      >
+        Clear filters
+      </button>
+    }
+  </div>
+
+  <!-- Results -->
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div class="animate-pulse overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div class="aspect-4/3 bg-slate-200 dark:bg-slate-800"></div>
+            <div class="space-y-3 p-5">
+              <div class="h-3 w-1/3 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div class="h-5 w-2/3 rounded bg-slate-200 dark:bg-slate-800"></div>
+              <div class="h-4 w-1/2 rounded bg-slate-200 dark:bg-slate-800"></div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @case ('error') {
+      <div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950/40">
+        <p class="font-semibold text-red-700 dark:text-red-400">Tours could not be loaded.</p>
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400/80">Please try again in a moment.</p>
+      </div>
+    }
+
+    @case ('loaded') {
+      @if (state(); as current) {
+        @if (current.status === 'loaded') {
+          @if (current.page.results.length) {
+            <div class="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              @for (tour of current.page.results; track tour.id) {
+                <a
+                  [routerLink]="['/tours', tour.id]"
+                  class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div class="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
+                    @if (tour.cover_image) {
+                      <img
+                        [src]="tour.cover_image"
+                        [alt]="tour.title"
+                        class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    }
+                    <span
+                      class="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur"
+                    >
+                      {{ tour.location }}
+                    </span>
+                  </div>
+
+                  <div class="flex flex-1 flex-col p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+                      {{ tour.activity_type }}
+                    </p>
+                    <h2 class="mt-1 text-lg font-semibold">{{ tour.title }}</h2>
+                    <p class="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{{ tour.description }}</p>
+
+                    <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                      @if (tour.average_rating !== null) {
+                        <span>★ {{ tour.average_rating | number: '1.1-1' }} ({{ tour.review_count }})</span>
+                      } @else {
+                        <span>New tour</span>
+                      }
+                      <span aria-hidden="true">·</span>
+                      <span>{{ tour.duration_minutes / 60 | number: '1.0-1' }} hours</span>
+                      <span aria-hidden="true">·</span>
+                      <span class="capitalize">{{ tour.difficulty }}</span>
+                    </div>
+
+                    <p class="mt-auto pt-4 text-sm text-slate-600 dark:text-slate-400">
+                      from
+                      <span class="text-xl font-bold text-slate-900 dark:text-white">
+                        {{ tour.price | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }}
+                      </span>
+                      / person
+                    </p>
+                  </div>
+                </a>
+              }
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages() > 1) {
+              <nav class="mt-10 flex items-center justify-center gap-4" aria-label="Pagination">
+                <button
+                  type="button"
+                  (click)="goToPage(filters().page! - 1)"
+                  [disabled]="!current.page.previous"
+                  class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:hover:bg-slate-800"
+                >
+                  ← Previous
+                </button>
+                <span class="text-sm text-slate-600 dark:text-slate-400">
+                  Page {{ filters().page }} of {{ totalPages() }}
+                </span>
+                <button
+                  type="button"
+                  (click)="goToPage(filters().page! + 1)"
+                  [disabled]="!current.page.next"
+                  class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:hover:bg-slate-800"
+                >
+                  Next →
+                </button>
+              </nav>
+            }
+          } @else {
+            <div class="mt-4 rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-700">
+              <p class="text-lg font-semibold">No tours match your filters</p>
+              <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Try another date or location.</p>
+              <button
+                type="button"
+                (click)="clearFilters()"
+                class="mt-5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                Clear filters
+              </button>
+            </div>
+          }
+        }
+      }
+    }
+  }
+</div>

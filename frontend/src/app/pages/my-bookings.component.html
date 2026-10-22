@@ -1,0 +1,167 @@
+<section class="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+  <div class="mx-auto max-w-4xl px-4 py-12">
+    <h1 class="text-3xl font-bold sm:text-4xl">My bookings</h1>
+    <p class="mt-2 text-slate-600 dark:text-slate-400">Your upcoming adventures and past trips.</p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-4xl px-4 py-10">
+  @if (actionError()) {
+    <p class="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-400" role="alert">
+      {{ actionError() }}
+    </p>
+  }
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="animate-pulse space-y-4">
+        @for (placeholder of [1, 2]; track placeholder) {
+          <div class="h-32 rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
+        }
+      </div>
+    }
+
+    @case ('error') {
+      <div class="rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950/40">
+        <p class="font-semibold text-red-700 dark:text-red-400">Your bookings could not be loaded.</p>
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400/80">Please try again in a moment.</p>
+      </div>
+    }
+
+    @case ('loaded') {
+      @if (upcoming().length === 0 && past().length === 0) {
+        <div class="rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-700">
+          <p class="text-lg font-semibold">No bookings yet</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">Find your first Arctic adventure.</p>
+          <a
+            routerLink="/tours"
+            class="mt-5 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            Browse tours
+          </a>
+        </div>
+      }
+
+      @for (group of [{ title: 'Upcoming', items: upcoming() }, { title: 'Past', items: past() }]; track group.title) {
+        @if (group.items.length) {
+          <section class="mb-12">
+            <h2 class="mb-4 text-xl font-bold">{{ group.title }}</h2>
+
+            <div class="space-y-4">
+              @for (booking of group.items; track booking.reference) {
+                <article
+                  class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                  [class.opacity-60]="booking.status === 'cancelled'"
+                >
+                  <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <h3 class="text-lg font-semibold">{{ booking.tour }}</h3>
+                      <p class="text-sm text-slate-600 dark:text-slate-400">
+                        {{ booking.start_time | date: 'EEEE d MMMM yyyy, HH:mm' : booking.start_time.slice(-6) }}
+                      </p>
+                      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                        {{ booking.participants }} {{ booking.participants === 1 ? 'person' : 'people' }} ·
+                        {{ booking.total_price | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }} ·
+                        Ref. <span class="font-mono">{{ booking.reference.slice(0, 8).toUpperCase() }}</span>
+                      </p>
+                    </div>
+
+                    <span
+                      class="rounded-full px-3 py-1 text-xs font-semibold capitalize"
+                      [class.bg-emerald-100]="booking.status === 'confirmed'"
+                      [class.text-emerald-800]="booking.status === 'confirmed'"
+                      [class.bg-amber-100]="booking.status === 'pending'"
+                      [class.text-amber-800]="booking.status === 'pending'"
+                      [class.bg-slate-200]="booking.status === 'cancelled'"
+                      [class.text-slate-700]="booking.status === 'cancelled'"
+                    >
+                      {{ booking.status }}
+                    </span>
+                  </div>
+
+                  <!-- Actions -->
+                  @if (booking.can_cancel || booking.can_review || booking.has_review) {
+                    <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+                      @if (booking.can_cancel) {
+                        <button
+                          type="button"
+                          (click)="cancel(booking)"
+                          [disabled]="busyReference() === booking.reference"
+                          class="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/50"
+                        >
+                          {{ busyReference() === booking.reference ? 'Cancelling…' : 'Cancel booking' }}
+                        </button>
+                      }
+
+                      @if (booking.can_review && reviewingReference() !== booking.reference) {
+                        <button
+                          type="button"
+                          (click)="openReview(booking)"
+                          class="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                        >
+                          Write a review
+                        </button>
+                      }
+
+                      @if (booking.has_review) {
+                        <span class="text-sm font-medium text-emerald-700 dark:text-emerald-400">✓ Reviewed</span>
+                      }
+                    </div>
+                  }
+
+                  <!-- Review form -->
+                  @if (reviewingReference() === booking.reference) {
+                    <div class="mt-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+                      <p class="text-sm font-medium">How was your tour?</p>
+                      <div class="mt-2 flex gap-1" role="radiogroup" aria-label="Rating">
+                        @for (star of [1, 2, 3, 4, 5]; track star) {
+                          <button
+                            type="button"
+                            (click)="rating.set(star)"
+                            role="radio"
+                            [attr.aria-checked]="rating() === star"
+                            [attr.aria-label]="star + (star === 1 ? ' star' : ' stars')"
+                            class="text-2xl transition"
+                            [class.text-amber-500]="star <= rating()"
+                            [class.text-slate-300]="star > rating()"
+                            [class.dark:text-slate-600]="star > rating()"
+                          >
+                            ★
+                          </button>
+                        }
+                      </div>
+                      <textarea
+                        rows="3"
+                        placeholder="Tell other travelers about your experience (optional)"
+                        [value]="comment()"
+                        (input)="onCommentInput($event)"
+                        class="mt-3 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+                      ></textarea>
+                      <div class="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          (click)="submitReview(booking)"
+                          [disabled]="busyReference() === booking.reference"
+                          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          {{ busyReference() === booking.reference ? 'Saving…' : 'Submit review' }}
+                        </button>
+                        <button
+                          type="button"
+                          (click)="closeReview()"
+                          class="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+        }
+      }
+    }
+  }
+</div>

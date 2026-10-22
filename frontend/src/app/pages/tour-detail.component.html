@@ -1,0 +1,328 @@
+<div class="mx-auto max-w-6xl px-4 py-8">
+  <a
+    routerLink="/tours"
+    class="text-sm font-semibold text-emerald-600 hover:underline dark:text-emerald-400"
+  >
+    ← All tours
+  </a>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="mt-6 animate-pulse space-y-6">
+        <div class="aspect-video rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
+        <div class="h-8 w-1/2 rounded bg-slate-200 dark:bg-slate-800"></div>
+        <div class="h-4 w-2/3 rounded bg-slate-200 dark:bg-slate-800"></div>
+      </div>
+    }
+
+    @case ('not-found') {
+      <div class="mt-10 rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-700">
+        <p class="text-lg font-semibold">Tour not found</p>
+        <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">It may have been removed or is no longer available.</p>
+        <a
+          routerLink="/tours"
+          class="mt-5 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+        >
+          Browse tours
+        </a>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="mt-10 rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950/40">
+        <p class="font-semibold text-red-700 dark:text-red-400">This tour could not be loaded.</p>
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400/80">Please try again in a moment.</p>
+      </div>
+    }
+
+    @case ('loaded') {
+      @if (state(); as current) {
+        @if (current.status === 'loaded') {
+          @let tour = current.tour;
+
+          <!-- Gallery -->
+          <div class="mt-6">
+            <div class="aspect-video overflow-hidden rounded-2xl bg-slate-200 dark:bg-slate-800">
+              @if (tour.images.length) {
+                <img
+                  [src]="tour.images[selectedImage()].image"
+                  [alt]="tour.images[selectedImage()].alt_text || tour.title"
+                  class="h-full w-full object-cover"
+                />
+              }
+            </div>
+
+            @if (tour.images.length > 1) {
+              <div class="mt-3 flex gap-3">
+                @for (image of tour.images; track image.image; let index = $index) {
+                  <button
+                    type="button"
+                    (click)="selectedImage.set(index)"
+                    [attr.aria-label]="'Show image ' + (index + 1)"
+                    class="h-20 w-28 overflow-hidden rounded-lg ring-2 transition"
+                    [class.ring-emerald-500]="selectedImage() === index"
+                    [class.ring-transparent]="selectedImage() !== index"
+                  >
+                    <img [src]="image.image" alt="" class="h-full w-full object-cover" />
+                  </button>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Info -->
+          <div class="mt-10 grid gap-10 lg:grid-cols-3">
+            <div class="lg:col-span-2">
+              <p class="text-sm font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                {{ tour.activity_type }} · {{ tour.location }}
+              </p>
+              <h1 class="mt-2 text-3xl font-bold sm:text-4xl">{{ tour.title }}</h1>
+
+              <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600 dark:text-slate-400">
+                @if (tour.average_rating !== null) {
+                  <span>★ {{ tour.average_rating | number: '1.1-1' }} ({{ tour.review_count }} reviews)</span>
+                } @else {
+                  <span>New tour</span>
+                }
+                <span aria-hidden="true">·</span>
+                <span>Guided by {{ tour.guide }}</span>
+              </div>
+
+              <p class="mt-6 leading-relaxed text-slate-700 dark:text-slate-300">{{ tour.description }}</p>
+            </div>
+
+                        <aside
+              class="h-fit rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-24 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <p class="text-sm text-slate-600 dark:text-slate-400">
+                from
+                <span class="text-3xl font-bold text-slate-900 dark:text-white">
+                  {{ tour.price | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }}
+                </span>
+                / person
+              </p>
+
+              <dl class="mt-5 space-y-3 text-sm">
+                <div class="flex justify-between">
+                  <dt class="text-slate-600 dark:text-slate-400">Duration</dt>
+                  <dd class="font-medium">{{ tour.duration_minutes / 60 | number: '1.0-1' }} hours</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-slate-600 dark:text-slate-400">Difficulty</dt>
+                  <dd class="font-medium capitalize">{{ tour.difficulty }}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-slate-600 dark:text-slate-400">Group size</dt>
+                  <dd class="font-medium">Up to {{ tour.max_participants }}</dd>
+                </div>
+              </dl>
+
+              <div class="mt-6 border-t border-slate-200 pt-6 dark:border-slate-800">
+                @if (selectedSlot(); as slot) {
+                  <p class="text-sm text-slate-600 dark:text-slate-400">Selected date</p>
+                  <p class="font-semibold">
+                    {{ slot.start_time | date: 'EEE d MMM, HH:mm' : slot.start_time.slice(-6) }}
+                  </p>
+
+                  <div class="mt-4 flex items-center justify-between">
+                    <span class="text-sm text-slate-600 dark:text-slate-400">Participants</span>
+                    <div class="flex items-center gap-3">
+                      <button
+                        type="button"
+                        (click)="changeParticipants(-1)"
+                        [disabled]="participants() <= 1"
+                        aria-label="Fewer participants"
+                        class="h-8 w-8 rounded-full border border-slate-300 font-semibold disabled:opacity-40 dark:border-slate-700"
+                      >
+                        −
+                      </button>
+                      <span class="w-6 text-center font-semibold">{{ participants() }}</span>
+                      <button
+                        type="button"
+                        (click)="changeParticipants(1)"
+                        [disabled]="participants() >= slot.available_spots"
+                        aria-label="More participants"
+                        class="h-8 w-8 rounded-full border border-slate-300 font-semibold disabled:opacity-40 dark:border-slate-700"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 flex items-center justify-between text-lg">
+                    <span class="font-medium">Total</span>
+                    <span class="font-bold">{{ totalPrice() | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="book()"
+                    [disabled]="booking().status === 'submitting'"
+                    class="mt-5 w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    @if (booking().status === 'submitting') {
+                      Booking…
+                    } @else if (auth.isLoggedIn()) {
+                      Book now
+                    } @else {
+                      Log in to book
+                    }
+                  </button>
+                } @else {
+                  <p class="text-sm text-slate-600 dark:text-slate-400">Choose a date below to book.</p>
+                  <a
+                    href="#dates"
+                    class="mt-4 block rounded-xl bg-emerald-600 px-4 py-3 text-center font-semibold text-white transition hover:bg-emerald-700"
+                  >
+                    See available dates
+                  </a>
+                }
+
+                @if (booking(); as result) {
+                  @if (result.status === 'success') {
+                    <div class="mt-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300" role="status">
+                      <p class="font-semibold">Booking confirmed!</p>
+                      <p class="mt-1">
+                        Reference: <span class="font-mono">{{ result.booking.reference.slice(0, 8).toUpperCase() }}</span>
+                      </p>
+                      <p>
+                        {{ result.booking.participants }}
+                        {{ result.booking.participants === 1 ? 'person' : 'people' }} ·
+                        {{ result.booking.total_price | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }}
+                      </p>
+                    </div>
+                  } @else if (result.status === 'error') {
+                    <p class="mt-4 rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-400" role="alert">
+                      {{ result.message }}
+                    </p>
+                  }
+                }
+              </div>
+            </aside>
+          </div>
+
+          <!-- Dates and forecast -->
+          <section id="dates" class="mt-16 scroll-mt-24">
+            <h2 class="text-2xl font-bold">Available dates</h2>
+            <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Weather is forecast about 10 days ahead, aurora activity about 3 days ahead. Times are local
+              (Norway).
+            </p>
+
+            @if (tour.slots.length) {
+              <div class="mt-6 grid gap-4 md:grid-cols-2">
+                                @for (slot of tour.slots; track slot.id) {
+                  @let slotForecast = forecastBySlot().get(slot.id);
+
+                  <button
+                    type="button"
+                    (click)="selectSlot(slot)"
+                    [disabled]="slot.available_spots === 0"
+                    [attr.aria-pressed]="selectedSlotId() === slot.id"
+                    class="rounded-2xl border bg-white p-5 text-left transition hover:border-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200 dark:bg-slate-900"
+                    [class.border-emerald-500]="selectedSlotId() === slot.id"
+                    [class.ring-2]="selectedSlotId() === slot.id"
+                    [class.ring-emerald-500]="selectedSlotId() === slot.id"
+                    [class.border-slate-200]="selectedSlotId() !== slot.id"
+                    [class.dark:border-slate-800]="selectedSlotId() !== slot.id"
+                  >
+                    <div class="flex items-start justify-between gap-4">
+                      <div>
+                        <p class="font-semibold">
+                          {{ slot.start_time | date: 'EEEE d MMMM' : slot.start_time.slice(-6) }}
+                        </p>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">
+                          {{ slot.start_time | date: 'HH:mm' : slot.start_time.slice(-6) }}
+                        </p>
+                      </div>
+                      @if (slot.available_spots > 0) {
+                        <span
+                          class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        >
+                          {{ slot.available_spots }} {{ slot.available_spots === 1 ? 'spot' : 'spots' }} left
+                        </span>
+                      } @else {
+                        <span
+                          class="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/15 dark:text-red-300"
+                        >
+                          Sold out
+                        </span>
+                      }
+                    </div>
+
+                    @if (slotForecast?.forecast; as weather) {
+                      <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200 pt-4 text-sm dark:border-slate-800">
+                        <span class="text-2xl" aria-hidden="true">{{ weatherIcon(weather.symbol_code) }}</span>
+                        @if (weather.air_temperature !== null) {
+                          <span class="font-medium">{{ weather.air_temperature | number: '1.0-0' }} °C</span>
+                        }
+                        @if (weather.cloud_area_fraction !== null) {
+                          <span class="text-slate-600 dark:text-slate-400">
+                            ☁ {{ weather.cloud_area_fraction | number: '1.0-0' }}%
+                          </span>
+                        }
+                        @if (weather.wind_speed !== null) {
+                          <span class="text-slate-600 dark:text-slate-400">
+                            💨 {{ weather.wind_speed | number: '1.0-0' }} m/s
+                          </span>
+                        }
+                        @if (slotForecast?.aurora; as aurora) {
+                          <span
+                            class="ml-auto rounded-full px-3 py-1 text-xs font-semibold capitalize"
+                            [class]="auroraBadgeClass(aurora.chance)"
+                          >
+                            Aurora: {{ aurora.chance ?? 'unknown' }} (Kp {{ aurora.kp | number: '1.0-1' }})
+                          </span>
+                        }
+                      </div>
+                    } @else {
+                      <p class="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-500 dark:border-slate-800">
+                        Forecast not available yet for this date.
+                      </p>
+                    }
+                  </button>
+                }
+              </div>
+
+              @if (forecast(); as forecastData) {
+                <p class="mt-4 text-xs text-slate-500">{{ forecastData.sources.join(' · ') }}</p>
+              }
+            } @else {
+              <p class="mt-6 rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">
+                No upcoming dates yet. Check back soon.
+              </p>
+            }
+          </section>
+
+          <!-- Reviews -->
+          <section class="mt-16">
+            <h2 class="text-2xl font-bold">Reviews</h2>
+
+            @if (reviews(); as reviewPage) {
+              @if (reviewPage.results.length) {
+                <div class="mt-6 space-y-4">
+                  @for (review of reviewPage.results; track review.id) {
+                    <article class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                      <div class="flex items-center justify-between gap-4">
+                        <p class="font-semibold">{{ review.reviewer }}</p>
+                        <p class="text-xs text-slate-500">{{ review.created_at | date: 'd MMM yyyy' }}</p>
+                      </div>
+                      <p class="mt-1 text-amber-500" [attr.aria-label]="review.rating + ' out of 5 stars'">
+                        {{ '★'.repeat(review.rating) }}<span class="text-slate-300 dark:text-slate-700">{{ '★'.repeat(5 - review.rating) }}</span>
+                      </p>
+                      @if (review.comment) {
+                        <p class="mt-2 text-slate-700 dark:text-slate-300">{{ review.comment }}</p>
+                      }
+                    </article>
+                  }
+                </div>
+              } @else {
+                <p class="mt-4 text-slate-600 dark:text-slate-400">No reviews yet. Be the first after your tour!</p>
+              }
+            }
+          </section>
+        }
+      }
+    }
+  }
+</div>
