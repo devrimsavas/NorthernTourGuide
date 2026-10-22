@@ -213,23 +213,19 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 
 ### Test suites
 
-| Test class             | Base class            | Database                  | What it covers                                                                                                                                    |
-| ---------------------- | --------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BookingCapacityTests` | `TransactionTestCase` | Yes, real commits         | Capacity limits, cancellation, and concurrent bookings competing for the same spots                                                               |
-| `ReviewApiTests`       | `APITestCase`         | Yes, rolled back per test | Review rules: only the booking's customer, only confirmed and finished tours, one review per booking, rating 1-5, average rating in the tour list |
-| `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                                                                                      |
-| `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages                                                                      |
-| `RegisterApiTests`     | `APITestCase`         | Yes, rolled back per test | Self-registration: always a customer, case-insensitive unique email, password strength, tokens returned                                           |
-| `MeApiTests`           | `APITestCase`         | Yes, rolled back per test | Current user endpoint: returns details and role, requires authentication                                                                          |
-| `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                                                                                         |
-| `GuideListApiTests`    | `APITestCase`         | Yes, rolled back per test | Public guide list: only active guides with a profile, no private data                                                                             |
-
-                                                                   |
-
-| `TourImageApiTests` | `APITestCase` | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder |
-| `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input) and sorted lookup lists |
-| `GuideBookingApiTests` | `APITestCase` | Yes, rolled back per test | Guide booking list: only bookings for the guide's own tours, slot filter, customers rejected |
-| `TourFilterApiTests` | `APITestCase` | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input), pagination and sorted lookup lists |
+| Test class             | Base class            | Database                  | What it covers                                                                                                                                                          |
+| ---------------------- | --------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BookingCapacityTests` | `TransactionTestCase` | Yes, real commits         | Capacity limits, cancellation, and concurrent bookings competing for the same spots                                                                                     |
+| `ReviewApiTests`       | `APITestCase`         | Yes, rolled back per test | Review rules: only the booking's customer, only confirmed and finished tours, one review per booking, rating 1-5, average rating in the tour list, booking action flags |
+| `GuideBookingApiTests` | `APITestCase`         | Yes, rolled back per test | Guide booking list: only bookings for the guide's own tours, slot filter, customers rejected                                                                            |
+| `GuideTourApiTests`    | `APITestCase`         | Yes, rolled back per test | Guide endpoints: tour ownership, role checks, capacity rules                                                                                                            |
+| `TourForecastApiTests` | `APITestCase`         | Yes, rolled back per test | Forecast endpoint with MET Norway and NOAA mocked, including service outages                                                                                            |
+| `TourImageApiTests`    | `APITestCase`         | Yes, rolled back per test | Tour images: cover image chosen by order, full URLs, all images in the detail, temporary media folder                                                                   |
+| `TourFilterApiTests`   | `APITestCase`         | Yes, rolled back per test | Tour filters (location, price, date range on a single slot, invalid input), pagination and sorted lookup lists                                                          |
+| `RegisterApiTests`     | `APITestCase`         | Yes, rolled back per test | Self-registration: always a customer, case-insensitive unique email, password strength, tokens returned                                                                 |
+| `MeApiTests`           | `APITestCase`         | Yes, rolled back per test | Current user endpoint: returns details and role, requires authentication                                                                                                |
+| `GuideListApiTests`    | `APITestCase`         | Yes, rolled back per test | Public guide list: only active guides with a profile, no private data                                                                                                   |
+| `AuroraChanceTests`    | `SimpleTestCase`      | No                        | The aurora chance rule as a pure function                                                                                                                               |
 
 ### Why different test types?
 
