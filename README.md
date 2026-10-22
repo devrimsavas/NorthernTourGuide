@@ -41,7 +41,7 @@ _Last updated: 2026-10-20_
 - [x] OpenAPI documentation with Swagger UI and ReDoc, schema validated in CI
 - [x] Pagination for the tour list and reviews
 - [x] Rate limiting on login and registration
-- [ ] Angular frontend
+- [x] Angular frontend
 
 ## Tech Stack
 
