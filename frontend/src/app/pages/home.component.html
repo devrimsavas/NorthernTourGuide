@@ -1,5 +1,5 @@
 <!-- Hero -->
-<section class="relative isolate flex min-h-[85vh] items-center overflow-hidden">
+<section class="relative isolate -mt-16 flex min-h-[85vh] items-center overflow-hidden pt-16">
   <img
     src="/images/herocover.jpg"
     alt="Green northern lights over snowy mountains and a red cabin"
@@ -100,54 +100,9 @@
       </a>
     </div>
 
-    <div class="grid gap-6 md:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-3">
       @for (tour of featuredTours(); track tour.id) {
-        <a
-          [routerLink]="['/tours', tour.id]"
-          class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
-        >
-          <div class="relative aspect-4/3 overflow-hidden bg-slate-200 dark:bg-slate-800">
-            @if (tour.cover_image) {
-              <img
-                [src]="tour.cover_image"
-                [alt]="tour.title"
-                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-              />
-            }
-            <span
-              class="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur"
-            >
-              {{ tour.location }}
-            </span>
-          </div>
-
-          <div class="flex flex-1 flex-col p-5">
-            <p
-              class="text-xs font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400"
-            >
-              {{ tour.activity_type }}
-            </p>
-            <h3 class="mt-1 text-lg font-semibold">{{ tour.title }}</h3>
-
-            <div class="mt-2 flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-              @if (tour.average_rating !== null) {
-                <span>★ {{ tour.average_rating | number: '1.1-1' }} ({{ tour.review_count }})</span>
-              } @else {
-                <span>New tour</span>
-              }
-              <span aria-hidden="true">·</span>
-              <span>{{ tour.duration_minutes / 60 | number: '1.0-1' }} hours</span>
-            </div>
-
-            <p class="mt-auto pt-4 text-sm text-slate-600 dark:text-slate-400">
-              from
-              <span class="text-xl font-bold text-slate-900 dark:text-white">
-                {{ tour.price | currency: 'NOK' : 'symbol-narrow' : '1.0-0' }}
-              </span>
-              / person
-            </p>
-          </div>
-        </a>
+        <app-tour-card [tour]="tour" />
       }
     </div>
   </section>
@@ -194,7 +149,9 @@
 @if (guides().length) {
   <section class="mx-auto max-w-6xl px-4 py-20">
     <div class="mb-10 max-w-2xl">
-      <p class="text-sm font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+      <p
+        class="text-sm font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400"
+      >
         Our guides
       </p>
       <h2 class="mt-2 text-3xl font-bold sm:text-4xl">Meet the people behind the tours</h2>
@@ -222,12 +179,17 @@
             <div>
               <h3 class="font-semibold">{{ guide.first_name }} {{ guide.last_name }}</h3>
               <p class="text-sm text-slate-600 dark:text-slate-400">
-                {{ guide.base_location ?? 'Northern Norway' }} · {{ guide.years_of_experience }} years
+                {{ guide.base_location ?? 'Northern Norway' }} ·
+                {{ guide.years_of_experience }} years
               </p>
             </div>
           </div>
-          <p class="mt-4 line-clamp-4 text-sm text-slate-600 dark:text-slate-400">{{ guide.bio }}</p>
-          <p class="mt-4 text-xs font-medium text-slate-500 dark:text-slate-500">Speaks {{ guide.languages }}</p>
+          <p class="mt-4 line-clamp-4 text-sm text-slate-600 dark:text-slate-400">
+            {{ guide.bio }}
+          </p>
+          <p class="mt-4 text-xs font-medium text-slate-500 dark:text-slate-500">
+            Speaks {{ guide.languages }}
+          </p>
         </article>
       }
     </div>

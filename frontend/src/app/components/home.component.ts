@@ -8,6 +8,7 @@ import { Guide } from '../models/guide.model';
 import { Tour } from '../models/tour.model';
 import { GuideService } from '../services/guide.service';
 import { TourService } from '../services/tour.service';
+import { TourCardComponent } from './tour-card/tour-card.component';
 
 interface Activity {
   name: string;
@@ -24,7 +25,7 @@ interface Feature {
 @Component({
   selector: 'app-home',
   templateUrl: '../pages/home.component.html',
-  imports: [RouterLink, CurrencyPipe, DecimalPipe],
+  imports: [RouterLink,TourCardComponent],
 })
 export class HomeComponent {
   private readonly tourService = inject(TourService);

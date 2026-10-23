@@ -9,6 +9,7 @@ import { roleGuard } from './guards/role.guard';
 import { GuidesComponent } from './components/guides.component';
 import { GuidePanelComponent } from './components/guide-panel.component';
 import { NewTourComponent } from './components/new-tour.component';
+import { NotFoundComponent } from './components/not-found.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -20,4 +21,6 @@ export const routes: Routes = [
   { path: 'guides', component: GuidesComponent },
   { path: 'guide', component: GuidePanelComponent, canActivate: [roleGuard('guide')] },
   { path: 'guide/tours/new', component: NewTourComponent, canActivate: [roleGuard('guide')] },
+  { path: '**', component: NotFoundComponent, title: 'Page not found | Aurora Trails' },
+
 ];

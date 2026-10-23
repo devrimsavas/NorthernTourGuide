@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, catchError, map, of, startWith, switchMap } from 'rxjs';
@@ -50,7 +50,9 @@ export class TourDetailComponent {
                 of<TourState>({ status: error.status === 404 ? 'not-found' : 'error' }),
               ),
             );
-            return reloadCount === 0 ? request$.pipe(startWith<TourState>({ status: 'loading' })) : request$;
+            return reloadCount === 0
+              ? request$.pipe(startWith<TourState>({ status: 'loading' }))
+              : request$;
           }),
         ),
       ),
@@ -73,10 +75,29 @@ export class TourDetailComponent {
   );
 
   protected readonly forecastBySlot = computed(
-    () => new Map<number, SlotForecast>((this.forecast()?.slots ?? []).map((slot) => [slot.slot_id, slot])),
+    () =>
+      new Map<number, SlotForecast>(
+        (this.forecast()?.slots ?? []).map((slot) => [slot.slot_id, slot]),
+      ),
   );
 
   protected readonly selectedImage = signal(0);
+  private readonly fragment = toSignal(this.route.fragment, { initialValue: null });
+  private hasScrolledToDates = false;
+
+  constructor() {
+    effect(() => {
+      if (
+        this.hasScrolledToDates ||
+        this.fragment() !== 'dates' ||
+        this.state().status !== 'loaded'
+      ) {
+        return;
+      }
+      this.hasScrolledToDates = true;
+      setTimeout(() => document.getElementById('dates')?.scrollIntoView({ behavior: 'smooth' }));
+    });
+  }
 
   // Booking
   protected readonly selectedSlotId = signal<number | null>(null);

@@ -9,6 +9,7 @@ import { Paginated } from '../models/paginated.model';
 import { Difficulty, Tour } from '../models/tour.model';
 import { LookupService } from '../services/lookup.service';
 import { TourFilters, TourService } from '../services/tour.service';
+import { TourCardComponent } from './tour-card/tour-card.component';
 
 const PAGE_SIZE = 9;
 
@@ -37,7 +38,7 @@ function toTourFilters(params: ParamMap): TourFilters {
 @Component({
   selector: 'app-tours',
   templateUrl: '../pages/tours.component.html',
-  imports: [RouterLink, CurrencyPipe, DecimalPipe],
+  imports: [RouterLink, TourCardComponent],
 })
 export class ToursComponent {
   private readonly route = inject(ActivatedRoute);

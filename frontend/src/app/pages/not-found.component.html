@@ -1,0 +1,30 @@
+<section class="relative isolate flex min-h-[80vh] items-center justify-center overflow-hidden px-4">
+  <img
+    src="/images/notfound.jpg"
+    alt="A lonely signpost in the snow with an arctic fox"
+    class="absolute inset-0 -z-10 h-full w-full object-cover"
+  />
+  <div class="absolute inset-0 -z-10 bg-slate-950/60"></div>
+
+  <div class="max-w-lg text-center text-white">
+    <p class="text-7xl font-bold tracking-tight text-emerald-300 sm:text-8xl">404</p>
+    <h1 class="mt-4 text-3xl font-bold sm:text-4xl">Lost in the snow</h1>
+    <p class="mt-4 text-lg text-slate-200">
+      Even the arctic fox can't find this page. It may have moved, or the trail never existed.
+    </p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a
+        routerLink="/"
+        class="rounded-xl bg-emerald-500 px-6 py-3 font-semibold text-slate-950 transition hover:bg-emerald-400"
+      >
+        Back to home
+      </a>
+      <a
+        routerLink="/tours"
+        class="rounded-xl border border-white/40 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur transition hover:bg-white/20"
+      >
+        Browse tours
+      </a>
+    </div>
+  </div>
+</section>
