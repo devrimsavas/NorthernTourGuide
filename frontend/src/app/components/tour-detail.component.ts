@@ -97,6 +97,15 @@ export class TourDetailComponent {
       this.hasScrolledToDates = true;
       setTimeout(() => document.getElementById('dates')?.scrollIntoView({ behavior: 'smooth' }));
     });
+    effect(() => {
+      const slot = this.selectedSlot();
+      if (!slot) return;
+      if (slot.available_spots === 0) {
+        this.selectedSlotId.set(null);
+      } else if (this.participants() > slot.available_spots) {
+        this.participants.set(slot.available_spots);
+      }
+    });
   }
 
   // Booking
@@ -151,6 +160,9 @@ export class TourDetailComponent {
       },
       error: (error: HttpErrorResponse) => {
         this.booking.set({ status: 'error', message: this.bookingErrorMessage(error) });
+        if (error.status === 400) {
+          this.reload$.next();
+        }
       },
     });
   }

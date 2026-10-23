@@ -16,10 +16,13 @@ def create_booking(customer,slot_id,participants):
         #read slot and lock .The second request for same slot waits until first request is done
         slot=TourSlot.objects.select_for_update().get(pk=slot_id)
         if participants > slot.available_spots:
-            #throw error if slot is not empty 
-            raise ValidationError(
-                {"participants": f"Only {slot.available_spots} spots left on this slot."}
-            )
+            if slot.available_spots == 0:
+                message = "This slot is sold out."
+            elif slot.available_spots == 1:
+                message = "Only 1 spot left on this slot."
+            else:
+                message = f"Only {slot.available_spots} spots left on this slot."
+            raise ValidationError({"participants": message})
         return Booking.objects.create(
             slot=slot,
             customer=customer,
