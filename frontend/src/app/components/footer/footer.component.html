@@ -1,0 +1,38 @@
+<footer class="border-t border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+  <div class="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3">
+    <div>
+      <p class="text-lg font-bold">Aurora Trails</p>
+      <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+        Arctic adventures with local guides in Northern Norway.
+      </p>
+    </div>
+
+    <nav aria-label="Footer">
+      <p class="text-sm font-semibold">Explore</p>
+      <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+        <li><a routerLink="/tours" class="hover:text-emerald-600 dark:hover:text-emerald-400">Tours</a></li>
+        <li><a routerLink="/guides" class="hover:text-emerald-600 dark:hover:text-emerald-400">Guides</a></li>
+      </ul>
+    </nav>
+
+    <div class="text-sm text-slate-600 dark:text-slate-400">
+      <p class="font-semibold text-slate-900 dark:text-slate-100">Data sources</p>
+      <p class="mt-3">
+        Weather data from
+        <a href="https://api.met.no/" target="_blank" rel="noopener" class="underline hover:text-emerald-600">MET Norway</a>
+        (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener" class="underline hover:text-emerald-600">CC BY 4.0</a>).
+      </p>
+      <p class="mt-1">
+        Kp index from
+        <a href="https://www.swpc.noaa.gov/" target="_blank" rel="noopener" class="underline hover:text-emerald-600">NOAA SWPC</a>.
+      </p>
+      <p class="mt-1">Images are illustrative.</p>
+    </div>
+  </div>
+
+  <div class="border-t border-slate-200 dark:border-slate-800">
+    <p class="mx-auto max-w-6xl px-4 py-4 text-xs text-slate-500">
+      © {{ year }} Aurora Trails · Devrim Savas Yilmaz
+    </p>
+  </div>
+</footer>

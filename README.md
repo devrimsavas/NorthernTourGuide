@@ -12,7 +12,7 @@ This project is personal to me. As a developer with a background in Arctic touri
 
 ## Roadmap
 
-_Last updated: 2026-10-20_
+_Last updated: 2026-10-23_
 
 - [x] PostgreSQL setup with environment-based configuration
 - [x] Custom user model with roles (guide, customer, admin) and email login
@@ -51,6 +51,7 @@ _Last updated: 2026-10-20_
 - django-filter, django-cors-headers, Pillow
 - requests (MET Norway and NOAA integrations)
 - GitHub Actions (CI with a PostgreSQL service container)
+- Angular, TypeScript, RxJS, Tailwind CSS (frontend)
 
 ## Getting Started
 
@@ -74,6 +75,52 @@ cd aurora_trails
 python manage.py migrate
 python manage.py runserver
 ```
+
+## Frontend
+
+The frontend is an Angular single-page application in the `frontend/` folder, styled with Tailwind CSS (v4) and supporting light and dark mode.
+
+### Features
+
+- **Visitors:** home page with featured tours and guides, tour list with filters and pagination, tour details with gallery, live availability, weather and aurora forecast per date, reviews, guide profiles
+- **Customers:** sign up and log in (also directly from the booking flow), book a tour, view upcoming and past bookings, cancel, write reviews
+- **Guides:** guide panel with upcoming groups and customer contacts, manage tours and dates, publish or hide tours, create new tours
+
+### Architecture
+
+- Standalone components, signals and the new control flow (`@if`, `@for`, `@switch`)
+- **Services** per API area (`TourService`, `BookingService`, `AuthService`, ...) with typed models matching the API
+- **HTTP interceptor** adds the JWT access token to API requests and refreshes it automatically when it expires
+- **Route guards** (`roleGuard('customer')`, `roleGuard('guide')`) for role-based pages. Real authorization is enforced by the API.
+- **App initializer** restores the logged-in user before the first render, so the UI never flashes the wrong state
+- **URL-driven filters:** tour filters live in the query string, so filtered results can be shared and the back button works
+- **Environment files** for the API base URL in development and production
+
+### Running the frontend
+
+The backend must be running on `http://localhost:8000`.
+
+```bash
+cd frontend
+npm ci
+npx ng serve
+```
+
+Open `http://localhost:4200`.
+
+### Screenshots
+
+**Home page and tours**
+
+![Home page and tours](docs/screenshots/mainpages.gif)
+
+**Customer booking flow**
+
+![Customer booking flow](docs/screenshots/customer1.gif)
+
+**Guide panel**
+
+![Guide panel](docs/screenshots/guidepanel.gif)
 
 ## API Documentation
 

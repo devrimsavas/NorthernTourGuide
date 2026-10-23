@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
   selector: 'app-header',
   imports: [RouterLink, RouterLinkActive],
   templateUrl: './header.component.html',
+  host: {class:'sticky top-0 z-50 block'},
 })
 export class HeaderComponent {
   protected readonly theme = inject(ThemeService);
