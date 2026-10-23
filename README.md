@@ -42,6 +42,7 @@ _Last updated: 2026-10-23_
 - [x] Pagination for the tour list and reviews
 - [x] Rate limiting on login and registration
 - [x] Angular frontend
+- [x] Continuous integration with GitHub Actions (backend tests against PostgreSQL, schema validation and Angular production build on every push)
 
 ## Tech Stack
 
@@ -279,6 +280,17 @@ Django creates a temporary test database (`test_aurora_trails`) for each run and
 - **`TransactionTestCase` for concurrency:** Django's default `TestCase` wraps each test in a transaction and rolls it back, which is fast but keeps everything in a single database connection. Row locking with `select_for_update` can only be tested with separate connections that really commit. The concurrency test starts two threads, each with its own connection, synchronized with a `threading.Barrier` so they hit the database at the same moment. Exactly one booking must succeed.
 - **`APITestCase` for endpoints:** Tests send real HTTP requests through DRF's test client. `force_authenticate` simulates a logged-in user, and URLs are resolved by name with `reverse()`, so tests keep working if paths change.
 - **`SimpleTestCase` for pure logic:** No database is created, which makes these the fastest tests.
+
+## Continuous Integration
+
+Every push and pull request runs a GitHub Actions workflow with two parallel jobs:
+
+| Job        | Steps                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend`  | Starts a PostgreSQL 18 service container, installs Python dependencies, validates the OpenAPI schema (`--fail-on-warn`) and runs all Django tests |
+| `frontend` | Installs Node.js dependencies with `npm ci` and builds the Angular app for production, catching TypeScript and template errors                    |
+
+External APIs (MET Norway, NOAA) are mocked in the tests, so the pipeline does not depend on third-party services.
 
 ### External APIs are mocked
 
