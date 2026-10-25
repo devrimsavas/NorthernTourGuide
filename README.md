@@ -4,6 +4,10 @@
 
 A booking platform for Arctic adventure tours in Northern Norway. Guides publish tours such as husky safaris, northern lights tours and Sami culture experiences, and customers book them by date and available capacity.
 
+**🌐 Live demo:** [aurora-trails.onrender.com](https://aurora-trails.onrender.com) · **📘 API docs:** [aurora-trails-api.onrender.com/api/docs](https://aurora-trails-api.onrender.com/api/docs/)
+
+> Demo login: `lukas.weber@example.test` (customer) or `kari.nordmann@auroratrails.test` (guide), password `AuroraDemo2026`. The free server may take up to a minute to wake up on the first visit.
+
 ## Why This Project
 
 This project is personal to me. As a developer with a background in Arctic tourism, including working as a tour guide in Alta, I know the challenges of the industry from the inside. I have previously presented to Innovasjon Norge on how digitalization could strengthen tourism in Northern Norway. Many tour operators in the region are small, often just a few guides, and they lack simple digital tools to reach visitors and manage bookings. Aurora Trails is my attempt to build that tool: a platform where local guides can offer their experiences and travelers can discover and book them easily, helping small businesses grow and bringing more visitors to the Arctic.
@@ -303,9 +307,39 @@ The application runs entirely on free tiers:
 | PostgreSQL       | Aiven (free plan)  | SSL required (`DB_SSLMODE=require`)                                          |
 | Uploaded images  | Backblaze B2       | S3-compatible storage via `django-storages`, private bucket with signed URLs |
 
-Live demo: _coming soon_
+### Live demo
+
+- **Website:** https://aurora-trails.onrender.com
+- **API documentation:** https://aurora-trails-api.onrender.com/api/docs/
+
+Demo accounts (password `AuroraDemo2026`):
+
+| Role     | Email                             |
+| -------- | --------------------------------- |
+| Customer | `lukas.weber@example.test`        |
+| Guide    | `kari.nordmann@auroratrails.test` |
 
 > The API runs on Render's free tier and sleeps after 15 minutes without traffic. The first request after a pause can take up to a minute while the server wakes up.
+
+### Render configuration
+
+**Backend (Web Service)**
+
+```bash
+# Build command
+pip install -r requirements.txt && cd aurora_trails && python manage.py collectstatic --noinput && python manage.py migrate && python manage.py seed_demo && (python manage.py createsuperuser --noinput || true)
+
+# Start command
+cd aurora_trails && gunicorn aurora_trails.wsgi:application
+```
+
+The free tier has no shell access, so migrations, demo data (`seed_demo`) and the admin user (`createsuperuser --noinput` with `DJANGO_SUPERUSER_*` variables) all run during the build. Both commands are safe to run on every deploy.
+
+**Frontend (Static Site)**
+
+- Build command: `cd frontend && npm ci && npx ng build`
+- Publish directory: `frontend/dist/frontend/browser`
+- Rewrite rule `/*` → `/index.html` so that Angular's client-side routes work when a page is opened or reloaded directly
 
 ### Production configuration
 
