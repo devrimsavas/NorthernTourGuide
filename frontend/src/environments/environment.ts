@@ -1,4 +1,5 @@
 //for production 
 export const environment = {
-  apiUrl: '/api',
+  production: true,
+  apiUrl: 'https://aurora-trails-api.onrender.com'
 };
