@@ -292,6 +292,46 @@ Every push and pull request runs a GitHub Actions workflow with two parallel job
 
 External APIs (MET Norway, NOAA) are mocked in the tests, so the pipeline does not depend on third-party services.
 
+## Deployment
+
+The application runs entirely on free tiers:
+
+| Part             | Service            | Notes                                                                        |
+| ---------------- | ------------------ | ---------------------------------------------------------------------------- |
+| Angular frontend | Render Static Site | Built with `ng build`, served as static files                                |
+| Django API       | Render Web Service | Gunicorn, static files served by WhiteNoise                                  |
+| PostgreSQL       | Aiven (free plan)  | SSL required (`DB_SSLMODE=require`)                                          |
+| Uploaded images  | Backblaze B2       | S3-compatible storage via `django-storages`, private bucket with signed URLs |
+
+Live demo: _coming soon_
+
+> The API runs on Render's free tier and sleeps after 15 minutes without traffic. The first request after a pause can take up to a minute while the server wakes up.
+
+### Production configuration
+
+All settings come from environment variables, so the same code runs locally and in production. Locally they are read from `aurora_trails/.env` (see `.env.example`).
+
+| Variable                                                                                                             | Purpose                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `SECRET_KEY`                                                                                                         | Django secret key, unique per environment                                                  |
+| `DEBUG`                                                                                                              | `True` locally, `False` in production (default `False`)                                    |
+| `ALLOWED_HOSTS`                                                                                                      | Domains the API answers to                                                                 |
+| `CSRF_TRUSTED_ORIGINS`                                                                                               | HTTPS origins trusted for the admin panel                                                  |
+| `CORS_ALLOWED_ORIGINS`                                                                                               | Frontend origin allowed to call the API                                                    |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`                                                            | PostgreSQL connection                                                                      |
+| `DB_SSLMODE`                                                                                                         | `prefer` locally, `require` for Aiven                                                      |
+| `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_ENDPOINT_URL`, `AWS_S3_REGION_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Backblaze B2 bucket for uploaded images. When not set, images are stored on the local disk |
+
+### Local vs production
+
+|                 | Local                      | Production                                       |
+| --------------- | -------------------------- | ------------------------------------------------ |
+| Web server      | `manage.py runserver`      | Gunicorn                                         |
+| Static files    | Django dev server          | WhiteNoise (compressed, cache-busted file names) |
+| Uploaded images | `aurora_trails/media/`     | Backblaze B2                                     |
+| Database        | Local PostgreSQL           | Aiven PostgreSQL over SSL                        |
+| CORS            | All origins (`DEBUG=True`) | Only the frontend origin                         |
+
 ### External APIs are mocked
 
 Tests never call MET Norway or NOAA. `unittest.mock.patch` replaces the fetch functions with fakes that return minimal responses or raise errors. This keeps tests fast, deterministic and runnable offline, and avoids sending unnecessary traffic to public services.
