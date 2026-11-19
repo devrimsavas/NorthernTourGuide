@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://aurora-trails-api.onrender.com/api',
+  apiUrl: 'https://aurora-api.devrimdev.no/api',
 };
