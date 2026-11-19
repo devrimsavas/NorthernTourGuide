@@ -1,0 +1,13 @@
+.git
+.github
+.vscode
+docs
+frontend
+**/__pycache__
+**/*.pyc
+**/venv
+**/.env
+**/media
+**/staticfiles
+**/db.sqlite3
+README.md

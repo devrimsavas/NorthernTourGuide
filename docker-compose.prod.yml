@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    image: aurora-trails-api
+    restart: unless-stopped
+    env_file: .env
+    # Only reachable from the server itself; Cloudflare Tunnel forwards public traffic here
+    ports:
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/admin/login/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
